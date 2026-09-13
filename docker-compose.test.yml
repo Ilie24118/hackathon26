@@ -1,0 +1,10 @@
+services:
+  test-db:
+    image: postgres:18-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: "hackathon-test"
+      POSTGRES_USER: "springtest"
+      POSTGRES_PASSWORD: "springtest"
+    ports:
+      - "5435:5432"

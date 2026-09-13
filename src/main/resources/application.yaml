@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active:
+      - prod
+
+  jpa:
+    open-in-view: false
+
+  messages:
+    basename: message
+
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true

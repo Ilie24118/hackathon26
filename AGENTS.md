@@ -16,9 +16,6 @@ Databases by environment:
 - `./gradlew bootRun` — dev server at http://localhost:8080. Requires Docker running. No env vars needed.
 - `./gradlew test` — requires Docker running; no env vars needed (tests use the test compose DB).
 - Single test: `./gradlew test --tests 'hackathon26.hackathon.note.NoteApiTests'`
-- Apply schema changes to the dev DB manually (schema is managed by hand; `db/schema.sql` is a
-  reference script, NOT auto-executed):
-  `docker compose exec -T postgres_hackathon_db psql -U spring -d hackathon < db/schema.sql`
 
 ## Gotchas
 - Boot 4 starter names differ from Boot 3: `spring-boot-starter-webmvc` (not `-web`), plus
@@ -31,8 +28,11 @@ Databases by environment:
   returns ALL columns and `KeyHolder.getKey()` fails with "multiple keys".
 - Profiles: base `application.yaml` has no active profile; tests use `test` via `@ActiveProfiles`;
   the Vercel image sets `SPRING_PROFILES_ACTIVE=prod`. Don't hardcode `spring.profiles.active` again.
-- Integration tests create their own tables (see `NoteApiTests.setUpTable`); copy that pattern for
-  new entities — there is no schema tooling (no Flyway/Liquibase, no auto-run schema.sql) by choice.
+- Schema: `src/main/resources/schema.sql` is auto-applied on every boot (`spring.sql.init.mode=always`)
+  against whichever DB is active (dev Docker, test Docker, Neon on Vercel). Keep its statements
+  idempotent (`CREATE TABLE IF NOT EXISTS`); add new tables there — no Flyway/Liquibase by choice.
+- Integration tests create their own tables anyway (see `NoteApiTests.setUpTable`); copy that
+  pattern for new entities so tests stay isolated from schema/seed state.
 - `.env.local` holds live Neon credentials and is gitignored — never commit, echo, or paste it.
 - JDK 21 must be installed locally — `settings.gradle` has no toolchain auto-provision resolver.
 - `Dockerfile.vercel` builds with the wrapper (Gradle 9.7.1), matching local builds.

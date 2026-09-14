@@ -1,20 +1,4 @@
 spring:
-  profiles:
-    active:
-      - prod
-
-  datasource:
-    url: jdbc:postgresql://${PGHOST}/${PGDATABASE}?sslmode=require
-    username: ${PGUSER}
-    password: ${PGPASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-
   messages:
     basename: message
 
@@ -24,4 +8,4 @@ spring:
         enabled: true
 
 server:
-  port: ${PORT:80}
+  port: ${PORT:8080}

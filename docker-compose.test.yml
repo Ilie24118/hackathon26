@@ -1,3 +1,5 @@
+name: hackathon-test
+
 services:
   test-db:
     image: postgres:18-alpine

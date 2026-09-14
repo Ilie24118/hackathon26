@@ -2,14 +2,16 @@
 FROM gradle:8-jdk21 AS build
 WORKDIR /src
 COPY build.gradle settings.gradle ./
+COPY gradlew ./
 COPY gradle ./gradle
-RUN gradle dependencies --no-daemon || true
+RUN ./gradlew dependencies --no-daemon || true
 COPY src ./src
-RUN gradle bootJar --no-daemon
+RUN ./gradlew bootJar --no-daemon
 
 # Run stage
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+ENV SPRING_PROFILES_ACTIVE=prod
 COPY --from=build /src/build/libs/*.jar app.jar
 
 EXPOSE 80

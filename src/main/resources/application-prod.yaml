@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${PGHOST}/${PGDATABASE}?sslmode=require
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    driver-class-name: org.postgresql.Driver

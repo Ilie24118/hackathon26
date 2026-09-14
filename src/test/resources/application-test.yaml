@@ -1,0 +1,6 @@
+spring:
+  docker:
+    compose:
+      file: docker-compose.test.yml
+      skip:
+        in-tests: false

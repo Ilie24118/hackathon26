@@ -39,4 +39,6 @@ out/
 ### macOS ###
 .DS_Store
 
+### Local-only ###
 .env.local
+AGENTS.md

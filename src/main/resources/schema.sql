@@ -1,5 +1,0 @@
-CREATE TABLE IF NOT EXISTS notes (
-    id      BIGSERIAL PRIMARY KEY,
-    title   VARCHAR(200) NOT NULL,
-    content TEXT NOT NULL
-);

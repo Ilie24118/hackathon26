@@ -1,4 +1,10 @@
 spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+
   sql:
     init:
       mode: always

@@ -39,8 +39,8 @@
     #detail{display:none}body.detail #detail{display:grid}body.detail .hero,body.detail #queue{display:none}
     .dphead{background:var(--white);border:1.5px solid var(--ink);box-shadow:8px 8px 0 rgba(22,22,22,.08);padding:22px 26px}.dphead .dtop{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.dback{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12.5px;font-weight:850}.dback:hover{background:var(--yellow)}.dphead .num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--muted);font-weight:700}.dphead h1{margin:14px 0 4px;font-size:clamp(26px,3.4vw,36px);letter-spacing:-.05em;line-height:1.06}.dphead .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.dphead .loc{margin-top:10px;font-size:13.5px;font-weight:650;color:#3b3b38}
     .dsec{background:var(--white);border:1.5px solid var(--ink);padding:20px 26px}
-    .dtitle{display:flex;align-items:center;gap:9px;margin-bottom:13px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:850;color:var(--muted)}.dtitle i{width:8px;height:8px;background:var(--orange);border-radius:50%}
-    .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.fact span{display:block;color:var(--muted);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}.fact b{display:block;margin-top:3px;font-size:13.5px;font-weight:700}.fact b.none{color:var(--muted);font-weight:600}
+    .dtitle{display:flex;align-items:center;margin-bottom:13px;text-transform:uppercase;letter-spacing:.07em;font-size:14px;font-weight:850;color:var(--ink)}
+    .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.fact span{display:block;color:#3b3b38;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}.fact b{display:block;margin-top:3px;font-size:14.5px;font-weight:700}.fact b.date{font-weight:400}.fact b.none{color:var(--muted);font-weight:600}
     .addrcmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.addrcard{border:1px solid var(--line);border-radius:3px;padding:11px 13px;background:var(--paper)}.addrcard span{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.addrcard b{font-size:13px;font-weight:700;line-height:1.45}
     .links{display:flex;flex-wrap:wrap;gap:8px}.linkbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12px;font-weight:800;color:var(--ink)}.linkbtn:hover{background:var(--yellow)}.linkbtn .arr{font-size:14px}
     .linkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--white);margin-bottom:7px;text-align:left}.linkrow:hover{background:#fffbe0;border-color:var(--ink)}.linkrow b{font-size:13px}.linkrow small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.linkrow .num{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted)}
@@ -283,13 +283,13 @@ function renderDetail(d){
       <div class="loc">${esc(d.address)}</div>
     </div>
     <div class="dsec">
-      <div class="dtitle"><i></i> Register facts (KBO)</div>
+      <div class="dtitle">Register facts (KBO)</div>
       <div class="facts">
         <div class="fact"><span>Legal status</span><b class="${r.legalStatus?'':'none'}">${esc(r.legalStatus||'Not recorded (establishment)')}</b></div>
         <div class="fact"><span>Legal form</span><b class="${r.legalForm?'':'none'}">${esc(r.legalForm||'—')}</b></div>
-        <div class="fact"><span>Registered on</span><b class="${r.registrationDate?'':'none'}">${r.registrationDate?fmtDate(r.registrationDate):'—'}</b></div>
-        <div class="fact"><span>Active since</span><b class="${r.startDate?'':'none'}">${r.startDate?fmtDate(r.startDate):'—'}</b></div>
-        <div class="fact"><span>Cessation date</span><b class="${r.cessationDate?'':'none'}">${r.cessationDate?fmtDate(r.cessationDate):'None recorded'}</b></div>
+        <div class="fact"><span>Registered on</span><b class="${r.registrationDate?'date':'none'}">${r.registrationDate?fmtDate(r.registrationDate):'—'}</b></div>
+        <div class="fact"><span>Active since</span><b class="${r.startDate?'date':'none'}">${r.startDate?fmtDate(r.startDate):'—'}</b></div>
+        <div class="fact"><span>Cessation date</span><b class="${r.cessationDate?'date':'none'}">${r.cessationDate?fmtDate(r.cessationDate):'None recorded'}</b></div>
         <div class="fact"><span>Main activity</span><b class="${r.activityDescription?'':'none'}">${esc(r.activityDescription||'Not in register (VAT/RSZ codes empty)')}</b></div>
       </div>
       <div class="addrcmp">
@@ -297,10 +297,10 @@ function renderDetail(d){
         <div class="addrcard"><span>Address register (AR) ${arTag}</span><b>${arAddr}</b></div>
       </div>
     </div>
-    ${(parentHtml||kidsHtml)?`<div class="dsec"><div class="dtitle"><i></i> Enterprise &amp; establishments</div>${parentHtml}${kidsHtml}</div>`:''}
-    ${sameHtml?`<div class="dsec"><div class="dtitle"><i></i> Also registered at this address</div>${sameHtml}</div>`:''}
+    ${(parentHtml||kidsHtml)?`<div class="dsec"><div class="dtitle">Enterprise &amp; establishments</div>${parentHtml}${kidsHtml}</div>`:''}
+    ${sameHtml?`<div class="dsec"><div class="dtitle">Also registered at this address</div>${sameHtml}</div>`:''}
     <div class="dsec">
-      <div class="dtitle"><i></i> Contact &amp; external checks</div>
+      <div class="dtitle">Contact &amp; external checks</div>
       <div class="facts" style="margin-bottom:13px">
         <div class="fact"><span>Phone</span><b class="${r.phone?'':'none'}">${r.phone?`<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:'Not in register'}</b></div>
         <div class="fact"><span>E-mail</span><b class="${r.email?'':'none'}">${r.email?`<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`:'Not in register'}</b></div>
@@ -313,7 +313,7 @@ function renderDetail(d){
       </div>
     </div>
     <div class="dsec">
-      <div class="dtitle"><i></i> AI website check</div>
+      <div class="dtitle">AI website check</div>
       <form class="form" id="aiform" style="border-style:solid">
         <div style="margin-bottom:9px"><label>Website URL</label><input id="aiurl" placeholder="https://www.example-business.be"></div>
         <div style="margin-bottom:9px"><label>Question (optional)</label><input id="aiq" placeholder="Does this website show a currently active business?"></div>
@@ -323,7 +323,7 @@ function renderDetail(d){
       <div class="note-line">Scrapes the website and has an AI model (via OpenRouter) judge the content. The answer is saved as evidence on this record.</div>
     </div>
     <div class="dsec">
-      <div class="dtitle"><i></i> Evidence of activity (${(d.evidence||[]).length})</div>
+      <div class="dtitle">Evidence of activity (${(d.evidence||[]).length})</div>
       ${eviHtml}
       <form class="form" id="evform">
         <div class="fr">
@@ -336,7 +336,7 @@ function renderDetail(d){
       </form>
     </div>
     <div class="dsec dhistory">
-      <div class="dtitle"><i></i> Officer decision</div>
+      <div class="dtitle">Officer decision</div>
       <div class="obs" style="font-size:13px;line-height:1.5;margin-bottom:4px"><b>${esc(d.proposal)}</b> — ${esc(d.reason)}</div>
       <form id="decform">
         <div class="form" style="margin-top:9px;border-style:solid">

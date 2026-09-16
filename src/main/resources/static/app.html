@@ -123,7 +123,7 @@ const state={rows:[],verified:[],chip:'look',search:'',street:'',limit:250,openI
 const SIGNAL={POSSIBLY_INACTIVE:['POSSIBLY INACTIVE','orange'],ADDRESS_CHECK:['CHECK ADDRESS',''],NEW_REGISTRATION:['NEW BUSINESS','green'],UNVERIFIED:['NO EVIDENCE','ghost'],EVIDENCE_REVIEW:['EVIDENCE TO REVIEW','']};
 const DECISION={CONFIRMED:['VERIFIED','green'],REJECTED:['REJECTED','ink'],NEEDS_FOLLOW_UP:['FOLLOW-UP','orange'],PENDING:['PENDING','ghost']};
 const CONF={HIGH:['High','#1f6b46'],MEDIUM:['Medium','#9b4400'],LOW:['Low','#8a8a83']};
-const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',OTHER:'Other'};
+const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',AI_CHECK:'AI website check',OTHER:'Other'};
 const CHIPS=[
   {id:'look',label:'Needs a look',test:r=>r.decisionStatus==='PENDING'},
   {id:'inactive',label:'Possibly inactive',test:r=>r.signal==='POSSIBLY_INACTIVE'},
@@ -272,6 +272,16 @@ async function openDetail(id){
       </div>
     </div>
     <div class="dsec">
+      <div class="dtitle"><i></i> AI website check</div>
+      <form class="form" id="aiform" style="border-style:solid">
+        <div style="margin-bottom:9px"><label>Website URL</label><input id="aiurl" placeholder="https://www.example-business.be"></div>
+        <div style="margin-bottom:9px"><label>Question (optional)</label><input id="aiq" placeholder="Does this website show a currently active business?"></div>
+        <div class="btnrow"><button type="submit" class="btn go" id="aibtn">Run AI check</button></div>
+      </form>
+      <div id="airesult" hidden></div>
+      <div class="note-line">Scrapes the website and has an AI model (via OpenRouter) judge the content. The answer is saved as evidence on this record.</div>
+    </div>
+    <div class="dsec">
       <div class="dtitle"><i></i> Evidence of activity (${d.evidence.length})</div>
       ${eviHtml}
       <form class="form" id="evform">
@@ -312,6 +322,26 @@ async function openDetail(id){
       await api('/api/businesses/'+encodeURIComponent(state.openId)+'/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       toast('Evidence added');await refresh();openDetail(state.openId);
     }catch(e){toast(e.message);}
+  });
+  $('aiform').addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    const url=$('aiurl').value.trim();
+    if(!(url.startsWith('http://')||url.startsWith('https://'))){toast('Enter a valid http(s) website URL');return;}
+    const btn=$('aibtn');btn.disabled=true;btn.textContent='Checking… (can take a minute)';
+    try{
+      const res=await fetch('/api/ai/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,question:$('aiq').value.trim(),registryNumber:state.openId})});
+      let out=null;
+      if(!res.ok){
+        try{const j=await res.json();out=j.message||j.detail;}catch(_){}
+        throw new Error(out||'AI check failed ('+res.status+')');
+      }
+      out=await res.json();
+      const box=$('airesult');box.hidden=false;
+      box.innerHTML=`<div class="evitem" style="margin-top:12px"><div class="evhead">${tag('AI ANSWER','ink')}<small style="color:var(--muted);font-weight:700">${esc(out.model)}</small></div><div class="obs">${esc(out.answer).replace(/\n/g,'<br>')}</div>${out.reasoning?`<details style="margin-top:8px"><summary style="font-size:11.5px;color:var(--muted);font-weight:700;cursor:pointer">Model reasoning</summary><div class="meta" style="margin-top:6px;white-space:pre-wrap">${esc(out.reasoning)}</div></details>`:''}<div class="meta">Saved as AI_CHECK evidence on ${esc(out.evidence?out.evidence.registryNumber:state.openId)} · ${fmtStamp(out.analyzedAt)}</div></div>`;
+      toast('AI answer saved as evidence');
+      await refresh();
+    }catch(e){toast(e.message);}
+    btn.disabled=false;btn.textContent='Run AI check';
   });
   document.querySelectorAll('#decform .decide .btn').forEach(b=>b.addEventListener('click',async()=>{
     const note=$('decnote').value;

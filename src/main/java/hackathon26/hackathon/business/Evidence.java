@@ -22,6 +22,7 @@ public class Evidence {
     private String registryNumber;
     private String sourceType;
     private String sourceUrl;
+    @jakarta.persistence.Column(columnDefinition = "text")
     private String observation;
     private LocalDate observedOn;
     private OffsetDateTime capturedAt;

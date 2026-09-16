@@ -28,7 +28,7 @@
     .evi b{font-weight:750}.evi small,.prop small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
     .conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.conf i{width:8px;height:8px;border-radius:50%}
     .prop{font-size:12.5px;font-weight:650}.prop .tagline{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-    .reviewbtn{padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--ink);color:var(--yellow);font-size:12px;font-weight:850}.trow:hover .reviewbtn{background:var(--orange);color:var(--ink)}
+    .reviewbtn{padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--ink);color:var(--yellow);font-size:12px;font-weight:850}.trow:hover .reviewbtn{background:var(--orange);color:var(--ink)}.bulkbtn{padding:9px 13px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12px;font-weight:850}.bulkbtn:hover:not(:disabled){background:var(--yellow)}.bulkbtn:disabled{cursor:wait;opacity:.7}
     .tag{display:inline-block;padding:4px 8px;border-radius:99px;background:#fff5c2;color:#715700;font-size:10px;font-weight:850;letter-spacing:.02em;text-transform:uppercase}.tag.orange{background:#ffe1c4;color:var(--amber-ink)}.tag.green{background:var(--green-bg);color:var(--green-ink)}.tag.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}.tag.ink{background:var(--ink);color:#fff}
     .empty{padding:44px 18px;text-align:center;color:var(--muted);font-size:14px;font-weight:650}.more{display:block;margin:16px auto;padding:11px 18px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:13px;font-weight:800}.more:hover{background:var(--yellow)}
     .vlayer{margin:64px 0 0}.vhead{display:flex;align-items:end;justify-content:space-between;gap:20px;flex-wrap:wrap}.vhead h2{margin:0;font-size:clamp(26px,3vw,38px);letter-spacing:-.05em;line-height:1}.vhead p{margin:8px 0 0;color:var(--muted);font-size:14px;max-width:560px;line-height:1.5}
@@ -92,7 +92,7 @@
     </div>
     <div class="shell chips" id="chips"></div></div>
 
-    <div class="count-line"><h2 id="queue-title">Review queue</h2><span id="queue-sub">…</span></div>
+    <div class="count-line"><h2 id="queue-title">Review queue</h2><span id="queue-sub">…</span><button class="bulkbtn" id="check-missing">Search missing locations</button></div>
     <div class="tblwrap" id="tblwrap">
       <div class="thead"><span>Address</span><span>Business</span><span>Register</span><span>Evidence</span><span>Certainty</span><span>Proposal</span><span></span></div>
       <div id="tbody"><div class="empty"><span class="spin"></span>Loading the Schoten register…</div></div>
@@ -123,7 +123,7 @@ const state={rows:[],verified:[],chip:'look',search:'',street:'',limit:250,openI
 const SIGNAL={POSSIBLY_INACTIVE:['POSSIBLY INACTIVE','orange'],ADDRESS_CHECK:['CHECK ADDRESS',''],NEW_REGISTRATION:['NEW BUSINESS','green'],UNVERIFIED:['NO EVIDENCE','ghost'],EVIDENCE_REVIEW:['EVIDENCE TO REVIEW','']};
 const DECISION={CONFIRMED:['VERIFIED','green'],REJECTED:['REJECTED','ink'],NEEDS_FOLLOW_UP:['FOLLOW-UP','orange'],PENDING:['PENDING','ghost']};
 const CONF={HIGH:['High','#1f6b46'],MEDIUM:['Medium','#9b4400'],LOW:['Low','#8a8a83']};
-const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',OTHER:'Other'};
+const SOURCE={WEBSITE:'Website',GOOGLE_MAPS:'Google Maps',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',OTHER:'Other'};
 const CHIPS=[
   {id:'look',label:'Needs a look',test:r=>r.decisionStatus==='PENDING'},
   {id:'inactive',label:'Possibly inactive',test:r=>r.signal==='POSSIBLY_INACTIVE'},
@@ -189,7 +189,7 @@ function rowHtml(r){
     <div class="addr"><b>${esc(r.street||'—')} ${esc(r.houseNumber||'')}</b><small>2900 Schoten</small></div>
     <div class="biz"><b>${esc(r.name)}</b><small>${r.recordType==='ESTABLISHMENT'?'Vestiging (establishment)':'Legal entity'} · ${esc(r.registryNumber)}${r.parentRegistryNumber?' · parent '+esc(r.parentRegistryNumber):''}</small></div>
     <div class="reg"><span class="legal ${legal?'':'none'}">${esc(legal||'—')}</span><div class="tagline" style="margin-top:5px">${tag(s[0],s[1])}</div></div>
-    <div class="evi"><b>${r.evidenceCount} item${r.evidenceCount===1?'':'s'}</b><small>${r.lastObservedOn?'observed '+fmtDate(r.lastObservedOn):'no evidence yet'}</small></div>
+    <div class="evi">${r.googleMapsLocation?`<b>${esc(r.googleMapsLocation)}</b><small>Google Maps location</small>`:`<b>No evidence</b>`}</div>
     <div class="conf"><i style="background:${c[1]}"></i>${c[0]}</div>
     <div class="prop">${decided?esc(r.proposal)+`<div class="tagline">${tag(d[0],d[1])}</div>`:esc(r.proposal)}</div>
     <button class="reviewbtn">Review</button>
@@ -204,6 +204,57 @@ function render(){
     ?rows.length.toLocaleString()+' records · everything on the table'
     :'showing '+shown.length.toLocaleString()+' of '+rows.length.toLocaleString()+' records';
   document.querySelectorAll('.trow').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
+}
+
+async function checkGoogleMaps(id,quiet=false){
+  try{
+    const detail=await api('/api/businesses/'+encodeURIComponent(id));
+    const record=detail.record;
+    if(!record.officialName||!record.latitude||!record.longitude)throw new Error('The KBO name or coordinates are missing');
+    const response=await fetch('/api/google-maps/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      companyName:record.officialName,latitude:Number(record.latitude),longitude:Number(record.longitude)
+    })});
+    const result=await response.json();
+    if(result.status==='PRESENT'){
+      const observation='Google Maps name-and-location match; address='+(result.formattedAddress||'')
+        +'; latitude='+(result.matchedLatitude??'')+'; longitude='+(result.matchedLongitude??'')
+        +'; distanceMeters='+(result.distanceMeters??'')+'; websiteUri='+(result.websiteUri||'')
+        +'; websiteDomain='+(result.websiteDomain||'');
+      const alreadyRecorded=(detail.evidence||[]).some(e=>e.sourceType==='GOOGLE_MAPS'&&e.sourceUrl===result.googleMapsUri);
+      if(!alreadyRecorded)await api('/api/businesses/'+encodeURIComponent(id)+'/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        sourceType:'GOOGLE_MAPS',sourceUrl:result.googleMapsUri||'',observation,observedOn:new Date().toISOString().slice(0,10),officer:officer()
+      })});
+      if(!quiet)toast(alreadyRecorded?'Maps evidence already recorded':(result.websiteDomain?'Maps evidence saved · '+result.websiteDomain:'Maps evidence saved'));
+      return 'present';
+    }else if(result.status==='NOT_FOUND'){
+      if(!quiet)toast('No Google Maps listing matched this name and location');
+      return 'not-found';
+    }else{
+      if(!quiet)toast(result.message||'Google Maps check failed');
+      return 'error';
+    }
+  }catch(error){
+    if(!quiet)toast(error.message||'Google Maps check failed');
+    return 'error';
+  }
+}
+
+async function checkMissingLocations(){
+  const button=$('check-missing');
+  const missing=state.rows.filter(row=>!row.googleMapsLocation);
+  if(!missing.length){toast('Every listed Google Maps location is already recorded');return;}
+  button.disabled=true;
+  let found=0, failed=false;
+  for(let index=0;index<missing.length;index++){
+    button.textContent='Searching '+(index+1)+' of '+missing.length+'…';
+    const outcome=await checkGoogleMaps(missing[index].registryNumber,true);
+    if(outcome==='present')found++;
+    if(outcome==='error'){failed=true;break;}
+  }
+  await refresh();
+  button.disabled=false;
+  button.textContent='Search missing locations';
+  toast(failed?'Stopped because Google Maps returned an error':found+' Google Maps location'+(found===1?'':'s')+' added to the register');
 }
 function renderVerified(){
   const v=state.verified;
@@ -341,6 +392,7 @@ async function refresh(){
 $('q').addEventListener('input',e=>{state.search=e.target.value;state.limit=250;render();});
 $('street').addEventListener('change',e=>{state.street=e.target.value;state.limit=250;render();});
 $('more').addEventListener('click',()=>{state.limit+=250;render();});
+$('check-missing').addEventListener('click',checkMissingLocations);
 $('backdrop').addEventListener('click',closeDetail);
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeDetail();

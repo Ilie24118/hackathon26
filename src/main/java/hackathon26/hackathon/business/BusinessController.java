@@ -1,5 +1,9 @@
 package hackathon26.hackathon.business;
 
+import hackathon26.hackathon.googlemaps.CompanyMapsVerificationRequest;
+import hackathon26.hackathon.googlemaps.CompanyMapsVerificationResult;
+import hackathon26.hackathon.googlemaps.GoogleMapsCompanyPresenceService;
+import hackathon26.hackathon.googlemaps.MapsListingStatus;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class BusinessController {
     private final BusinessService service;
     private final BusinessRepository repository;
-    public BusinessController(BusinessService service, BusinessRepository repository) { this.service=service; this.repository=repository; }
+    private final GoogleMapsCompanyPresenceService googleMaps;
+    public BusinessController(BusinessService service, BusinessRepository repository, GoogleMapsCompanyPresenceService googleMaps) { this.service=service; this.repository=repository; this.googleMaps=googleMaps; }
 
     @GetMapping
     public List<Map<String,Object>> list(@RequestParam(required=false) String query, @RequestParam(required=false) String signal, @RequestParam(required=false) String decision) { return service.list(query,signal,decision); }
@@ -33,6 +38,20 @@ public class BusinessController {
     public ResponseEntity<Evidence> evidence(@PathVariable String registryNumber,@RequestBody EvidenceInput input) {
         requireRecord(registryNumber); if (blank(input.sourceType())||blank(input.observation())||input.observedOn()==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"sourceType, observation and observedOn are required");
         return ResponseEntity.status(HttpStatus.CREATED).body(repository.addEvidence(registryNumber,input.sourceType(),input.sourceUrl(),input.observation(),input.observedOn(),blank(input.officer())?"Officer":input.officer()));
+    }
+    @PostMapping("/{registryNumber}/google-maps/verify")
+    public CompanyMapsVerificationResult verifyGoogleMaps(@PathVariable String registryNumber, @RequestBody(required=false) GoogleMapsInput input) {
+        RegistryRecord record = repository.find(registryNumber).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Business record not found"));
+        final double latitude;
+        final double longitude;
+        try { latitude=Double.parseDouble(record.getLatitude()); longitude=Double.parseDouble(record.getLongitude()); }
+        catch (Exception e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This record has no valid coordinates for a Google Maps check"); }
+        CompanyMapsVerificationResult result = googleMaps.verify(new CompanyMapsVerificationRequest(service.name(record),latitude,longitude));
+        if (result.status()==MapsListingStatus.PRESENT) {
+            String officer=input==null||blank(input.officer())?"Officer":input.officer();
+            repository.addEvidence(registryNumber,"GOOGLE_MAPS",result.googleMapsUri(),googleMapsObservation(result),LocalDate.now(),officer);
+        }
+        return result;
     }
     @PostMapping("/{registryNumber}/decisions")
     public ResponseEntity<ReviewDecision> decision(@PathVariable String registryNumber,@RequestBody DecisionInput input) {
@@ -46,7 +65,12 @@ public class BusinessController {
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=schoten-verified-businesses.csv").contentType(MediaType.valueOf("text/csv")).body(csv.toString());
     }
     private void requireRecord(String id){if(repository.find(id).isEmpty())throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Business record not found");}
+    private String googleMapsObservation(CompanyMapsVerificationResult result) {
+        return "googleMapsChecked=true; matchedPlaceName="+safe(result.matchedPlaceName())+"; address="+safe(result.formattedAddress())+"; latitude="+safe(result.matchedLatitude())+"; longitude="+safe(result.matchedLongitude())+"; distanceMeters="+safe(result.distanceMeters())+"; websiteUri="+safe(result.websiteUri())+"; websiteDomain="+safe(result.websiteDomain())+"; businessStatus="+safe(result.businessStatus())+"; openNow="+safe(result.openNow())+"; openingHours="+safe(result.openingHours()).replace("\n"," | ");
+    }
+    private String safe(Object value){return value==null?"":String.valueOf(value).replace(";",",");}
     private boolean blank(String s){return s==null||s.isBlank();} private String escape(String s){return "\""+(s==null?"":s.replace("\"","\"\""))+"\"";}
     public record EvidenceInput(String sourceType,String sourceUrl,String observation,LocalDate observedOn,String officer) {}
+    public record GoogleMapsInput(String officer) {}
     public record DecisionInput(String status,String note,String officer) {}
 }

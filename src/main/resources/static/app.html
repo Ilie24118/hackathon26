@@ -268,8 +268,8 @@ function googleMapsEvidenceHtml(e){
       <div class="gm-fact"><span>Address</span><b>${esc(v.address||'Not listed')}</b></div>
       <div class="gm-fact"><span>Website</span><b>${websiteHtml}</b></div>
       <div class="gm-fact"><span>Business status</span><b>${esc(status)}</b></div>
-      <div class="gm-fact"><span>Right now</span><b>${esc(openNow)}</b></div>
-      <div class="gm-fact gm-hours"><span>Opening hours</span><b class="${v.openingHours?'':'gm-unknown'}">${esc(v.openingHours||'Not available from Google Maps')}</b></div>
+      ${v.openNow==='true'||v.openNow==='false'?`<div class="gm-fact"><span>Right now</span><b>${esc(openNow)}</b></div>`:''}
+      ${v.openingHours?`<div class="gm-fact gm-hours"><span>Opening hours</span><b>${esc(v.openingHours)}</b></div>`:''}
     </div>
     <div class="meta">Recorded by ${esc(e.officer)} · ${fmtStamp(e.capturedAt)}</div></div>`;
 }
@@ -279,6 +279,15 @@ async function loadDetail(id){
   const d=await api('/api/businesses/'+encodeURIComponent(id));
   document.title='VerifyLocal — '+d.name;
   renderDetail(d);
+  refreshGoogleMapsEvidence(d);
+}
+async function refreshGoogleMapsEvidence(d){
+  const latest=(d.evidence||[]).find(e=>e.sourceType==='GOOGLE_MAPS');
+  if(!latest||evidenceValues(latest.observation).googleMapsChecked==='true') return;
+  try{
+    const result=await api('/api/businesses/'+encodeURIComponent(state.openId)+'/google-maps/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({officer:officer()})});
+    if(result.status==='PRESENT') await reloadDetail();
+  }catch(_){/* Keep the existing evidence visible when a refresh is unavailable. */}
 }
 async function reloadDetail(){
   const y=window.scrollY;

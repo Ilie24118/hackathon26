@@ -12,10 +12,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
 /**
- * Loads OPENROUTER_API_KEY from a Vercel-style .env.local in the working directory when it is
- * not already present in the environment (real env vars and config files keep precedence).
- * Only the OpenRouter key is exposed on purpose: the file also holds live Neon credentials
- * that must never leak into dev/test datasource wiring.
+ * Loads the API keys needed by local integrations from .env.local or .env when they are not
+ * already present in the environment. Database credentials are deliberately not exposed.
  */
 public class EnvLocalEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
     static final String PROPERTY_SOURCE_NAME = "env.local";
@@ -23,12 +21,13 @@ public class EnvLocalEnvironmentPostProcessor implements EnvironmentPostProcesso
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         if (environment.getPropertySources().contains(PROPERTY_SOURCE_NAME)) return;
-        if (environment.getProperty("OPENROUTER_API_KEY") != null) return;
-        String key = readEnvLocal(Path.of(".env.local")).get("OPENROUTER_API_KEY");
-        if (key != null && !key.isBlank()) {
-            environment.getPropertySources().addLast(
-                    new MapPropertySource(PROPERTY_SOURCE_NAME, Map.of("OPENROUTER_API_KEY", key)));
-        }
+        Map<String, String> local = readEnvLocal(Path.of(".env.local"));
+        Map<String, String> env = readEnvLocal(Path.of(".env"));
+        Map<String, Object> properties = new HashMap<>();
+        addIfMissing(environment, properties, "OPENROUTER_API_KEY", local, env);
+        addIfMissing(environment, properties, "GOOGLE_MAPS_API_KEY", local, env);
+        if (!properties.isEmpty()) environment.getPropertySources().addLast(
+                new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
     }
 
     @Override
@@ -49,6 +48,13 @@ public class EnvLocalEnvironmentPostProcessor implements EnvironmentPostProcesso
             }
         } catch (IOException ignored) { }
         return values;
+    }
+
+    private void addIfMissing(ConfigurableEnvironment environment, Map<String, Object> properties, String key,
+                              Map<String, String> local, Map<String, String> env) {
+        if (environment.getProperty(key) != null) return;
+        String value = local.getOrDefault(key, env.get(key));
+        if (value != null && !value.isBlank()) properties.put(key, value);
     }
 
     private String unquote(String value) {

@@ -29,6 +29,7 @@ public class BusinessRepository {
             rs.getString("latitude"), rs.getString("longitude"), rs.getString("phone"), rs.getString("email"),
             rs.getString("annual_account_url"));
     private final JdbcTemplate jdbc;
+    private volatile boolean observationColumnMigrated;
     public BusinessRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public int countRecords() { return jdbc.queryForObject("SELECT count(*) FROM registry_records", Integer.class); }
@@ -71,9 +72,15 @@ public class BusinessRepository {
     }
     public List<Evidence> evidence(String id) { return jdbc.query("SELECT * FROM business_evidence WHERE registry_number=? ORDER BY observed_on DESC, id DESC", (rs,n) -> new Evidence(rs.getLong("id"),rs.getString("registry_number"),rs.getString("source_type"),rs.getString("source_url"),rs.getString("observation"),rs.getObject("observed_on",LocalDate.class),rs.getObject("captured_at",OffsetDateTime.class),rs.getString("officer")), id); }
     public Evidence addEvidence(String id, String type, String url, String observation, LocalDate observedOn, String officer) {
+        ensureObservationColumnIsText();
         KeyHolder keys = new GeneratedKeyHolder(); OffsetDateTime now = OffsetDateTime.now();
         jdbc.update(c -> { PreparedStatement ps=c.prepareStatement("INSERT INTO business_evidence (registry_number,source_type,source_url,observation,observed_on,captured_at,officer) VALUES (?,?,?,?,?,?,?)",new String[]{"id"}); ps.setString(1,id);ps.setString(2,type);ps.setString(3,url);ps.setString(4,observation);ps.setObject(5,observedOn);ps.setObject(6,now);ps.setString(7,officer);return ps;},keys);
         return new Evidence(keys.getKey().longValue(),id,type,url,observation,observedOn,now,officer);
+    }
+    private synchronized void ensureObservationColumnIsText() {
+        if (observationColumnMigrated) return;
+        jdbc.execute("ALTER TABLE business_evidence ALTER COLUMN observation TYPE TEXT");
+        observationColumnMigrated = true;
     }
     public Map<String, List<ReviewDecision>> decisionsByRecord() {
         Map<String, List<ReviewDecision>> grouped = new LinkedHashMap<>();

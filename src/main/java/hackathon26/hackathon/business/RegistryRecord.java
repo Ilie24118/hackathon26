@@ -19,19 +19,25 @@ public class RegistryRecord {
     private String recordType;
     private String officialName;
     private String tradeName;
+    private String searchName;
     private String legalStatus;
+    private String legalForm;
     private String kboStreet;
     private String kboHouseNumber;
+    private String kboBusNumber;
     private String kboPostcode;
     private String municipality;
     private String addressStreet;
     private String addressHouseNumber;
+    private String addressBusNumber;
     private String addressPostcode;
     private String activityDescription;
+    private String registrationDate;
     private String startDate;
+    private String cessationDate;
     private String latitude;
     private String longitude;
     private String phone;
     private String email;
-    private String cessationDate;
+    private String annualAccountUrl;
 }

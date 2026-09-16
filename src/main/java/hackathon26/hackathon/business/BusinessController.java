@@ -26,7 +26,7 @@ public class BusinessController {
     @GetMapping
     public List<Map<String,Object>> list(@RequestParam(required=false) String query, @RequestParam(required=false) String signal, @RequestParam(required=false) String decision) { return service.list(query,signal,decision); }
     @GetMapping("/meta")
-    public Map<String,Object> meta() { return Map.of("municipality","Schoten","records",repository.countRecords(),"snapshotRetrievedOn","2026-09-07","sourceAttribution","publieke KBO gegevens, verrijkt met adressen uit het Vlaamse Adressenregister.","partialSample",true,"refreshNeeded",true); }
+    public Map<String,Object> meta() { return service.meta(); }
     @GetMapping("/{registryNumber}")
     public Map<String,Object> detail(@PathVariable String registryNumber) { try { return service.detail(registryNumber); } catch (IllegalArgumentException e) { throw new ResponseStatusException(HttpStatus.NOT_FOUND,e.getMessage()); } }
     @PostMapping("/{registryNumber}/evidence")

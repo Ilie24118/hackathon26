@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="VerifyLocal workspace: inspect Schoten business records, gather evidence and approve changes before publication.">
+  <title>VerifyLocal — Schoten workspace</title>
+  <style>
+    :root{--yellow:#fff000;--orange:#ff7a00;--ink:#161616;--muted:#5e5e5a;--line:#dbdbd3;--paper:#fffefa;--white:#fff;--soft:#ecece7;--green-bg:#d9f0e3;--green-ink:#1f6b46;--amber-ink:#9b4400}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--paper);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+    .shell{width:min(1180px,calc(100% - 48px));margin:auto}.nav{height:80px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:block;width:190px;height:55px;overflow:hidden;border-radius:4px}.brand img{display:block;width:220px;height:auto;margin:-28px 0 0 -22px}.nav-links{display:flex;align-items:center;gap:26px;font-size:14px;font-weight:650}.nav-links a{color:#3b3b38}.nav-links a.active{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}.nav-cta{padding:11px 17px;background:var(--ink);color:var(--yellow);border-radius:3px;font-weight:800}.nav-cta:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(0,0,0,.14)}
+    .officer{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted)}.officer input{width:130px;padding:8px 10px;border:1.5px solid var(--ink);border-radius:3px;font:inherit;font-size:13px;font-weight:650;background:var(--white)}.officer input:focus{outline:none;border-color:var(--orange)}
+    .hero{position:relative;overflow:hidden;border-top:1px solid var(--line);background:var(--yellow)}.hero:after{content:"";position:absolute;width:560px;height:560px;right:-240px;top:-160px;border:2px solid rgba(22,22,22,.14);border-radius:50%;box-shadow:0 0 0 45px rgba(22,22,22,.06),0 0 0 105px rgba(22,22,22,.05)}.hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:58px 0 64px}
+    .eyebrow{display:flex;align-items:center;gap:9px;color:#443b00;text-transform:uppercase;letter-spacing:.115em;font-size:12px;font-weight:850}.eyebrow i{width:9px;height:9px;display:block;background:var(--orange);border-radius:50%}
+    .hero h1{margin:16px 0 0;font-size:clamp(38px,4.6vw,60px);line-height:1;letter-spacing:-.055em}.hero p{max-width:560px;margin:18px 0 0;font-size:17px;line-height:1.5;color:#302f22}.hero .attr{margin-top:14px;font-size:12px;font-style:italic;color:#6b6212}
+    .stat-card{background:var(--white);border:1.5px solid var(--ink);box-shadow:12px 12px 0 var(--orange)}.stat-top{display:flex;align-items:center;justify-content:space-between;padding:15px 19px;border-bottom:1px solid var(--line);font-size:13px;font-weight:800}.live{display:flex;align-items:center;gap:6px;color:#267351;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#32a66e}.stats{display:grid;grid-template-columns:repeat(2,1fr)}.stat{padding:17px 19px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}.stat:nth-child(n+3){border-bottom:0}.stat b{display:block;font-size:26px;letter-spacing:-.05em}.stat span{color:var(--muted);font-size:11px;font-weight:700}
+    .toolbar{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1.5px solid var(--ink)}.toolbar-inner{display:flex;align-items:center;gap:14px;padding:14px 0;flex-wrap:wrap}.search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;padding:10px 13px;background:var(--white);border:1.5px solid var(--ink);border-radius:3px}.search input{flex:1;border:0;font:inherit;font-size:14px;font-weight:600;background:none}.search input:focus{outline:none}.search kbd{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:2px 5px}
+    .street{padding:10px 12px;border:1.5px solid var(--ink);border-radius:3px;font:inherit;font-size:13px;font-weight:650;background:var(--white);max-width:230px}.street:focus{outline:none;border-color:var(--orange)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 14px}.chip{padding:8px 13px;border:1.5px solid var(--ink);border-radius:99px;background:var(--white);font-size:12.5px;font-weight:800;transition:transform .15s}.chip small{margin-left:6px;font-weight:850;opacity:.55}.chip:hover{transform:translateY(-1px)}.chip.on{background:var(--ink);color:var(--yellow)}.chip.on small{opacity:.8}
+    .count-line{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:26px 0 12px}.count-line h2{margin:0;font-size:21px;letter-spacing:-.04em}.count-line span{color:var(--muted);font-size:13px;font-weight:650}
+    .tblwrap{background:var(--white);border:1.5px solid var(--ink);box-shadow:8px 8px 0 rgba(22,22,22,.08);overflow-x:auto}
+    .thead,.trow{display:grid;grid-template-columns:1fr 1.5fr 1.05fr .95fr 92px 1.2fr 86px;gap:12px;align-items:center;min-width:880px}
+    .thead{padding:13px 18px;border-bottom:1.5px solid var(--ink);color:var(--muted);font-size:10.5px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:var(--paper)}
+    .trow{padding:13px 18px;border-top:1px solid var(--soft);font-size:13.5px;cursor:pointer;transition:background .12s}.trow:first-of-type{border-top:0}.trow:hover{background:#fffbe0}
+    .addr b{display:block;font-weight:700}.addr small,.cell small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+    .biz b{display:block;font-weight:750;letter-spacing:-.01em}.biz small{display:block;margin-top:3px;color:var(--muted);font-size:11px}.biz small a{text-decoration:underline}
+    .reg .legal{font-size:12.5px;color:#3b3b38}.reg .legal.none{color:var(--muted)}
+    .evi b{font-weight:750}.evi small,.prop small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+    .conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.conf i{width:8px;height:8px;border-radius:50%}
+    .prop{font-size:12.5px;font-weight:650}.prop .tagline{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+    .reviewbtn{padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--ink);color:var(--yellow);font-size:12px;font-weight:850}.trow:hover .reviewbtn{background:var(--orange);color:var(--ink)}
+    .tag{display:inline-block;padding:4px 8px;border-radius:99px;background:#fff5c2;color:#715700;font-size:10px;font-weight:850;letter-spacing:.02em;text-transform:uppercase}.tag.orange{background:#ffe1c4;color:var(--amber-ink)}.tag.green{background:var(--green-bg);color:var(--green-ink)}.tag.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}.tag.ink{background:var(--ink);color:#fff}
+    .empty{padding:44px 18px;text-align:center;color:var(--muted);font-size:14px;font-weight:650}.more{display:block;margin:16px auto;padding:11px 18px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:13px;font-weight:800}.more:hover{background:var(--yellow)}
+    .vlayer{margin:64px 0 0}.vhead{display:flex;align-items:end;justify-content:space-between;gap:20px;flex-wrap:wrap}.vhead h2{margin:0;font-size:clamp(26px,3vw,38px);letter-spacing:-.05em;line-height:1}.vhead p{margin:8px 0 0;color:var(--muted);font-size:14px;max-width:560px;line-height:1.5}
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:13px 19px;border-radius:3px;background:var(--ink);color:#fff;font-size:14px;font-weight:800;transition:transform .2s,box-shadow .2s}.button:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(0,0,0,.14)}.button.gold{color:var(--yellow)}
+    .vtable{margin-top:22px;background:var(--white);border:1.5px solid var(--ink);box-shadow:8px 8px 0 rgba(22,22,22,.08);overflow-x:auto}
+    .vhead-row,.vrow{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.3fr 2fr;gap:12px;padding:12px 18px;min-width:760px;align-items:center}.vhead-row{border-bottom:1.5px solid var(--ink);color:var(--muted);font-size:10.5px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:var(--paper)}.vrow{border-top:1px solid var(--soft);font-size:13px}.vrow:first-of-type{border-top:0}.vrow b{font-weight:750}.vrow small{color:var(--muted)}
+    .backdrop{position:fixed;inset:0;background:rgba(22,22,22,.42);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}.backdrop.open{opacity:1;pointer-events:auto}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--white);border-left:2px solid var(--ink);box-shadow:-14px 0 0 rgba(255,122,0,.9);z-index:50;transform:translateX(103%);transition:transform .25s;overflow-y:auto;display:flex;flex-direction:column}.drawer.open{transform:none}
+    .dhead{position:sticky;top:0;background:var(--white);padding:22px 24px 16px;border-bottom:1.5px solid var(--ink);z-index:2}.dhead .close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:16px;font-weight:850}.dhead .close:hover{background:var(--yellow)}.dhead h2{margin:12px 0 4px;font-size:24px;letter-spacing:-.04em;line-height:1.1;padding-right:44px}.dhead .num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--muted);font-weight:700}.dhead .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.dhead .loc{margin-top:10px;font-size:13px;font-weight:650;color:#3b3b38}
+    .dsec{padding:19px 24px;border-bottom:1px solid var(--soft)}.dsec:last-child{border-bottom:0}.dtitle{display:flex;align-items:center;gap:9px;margin-bottom:13px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:850;color:var(--muted)}.dtitle i{width:8px;height:8px;background:var(--orange);border-radius:50%}
+    .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.fact span{display:block;color:var(--muted);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}.fact b{display:block;margin-top:3px;font-size:13.5px;font-weight:700}.fact b.none{color:var(--muted);font-weight:600}
+    .addrcmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.addrcard{border:1px solid var(--line);border-radius:3px;padding:11px 13px;background:var(--paper)}.addrcard span{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.addrcard b{font-size:13px;font-weight:700;line-height:1.45}
+    .links{display:flex;flex-wrap:wrap;gap:8px}.linkbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12px;font-weight:800;color:var(--ink)}.linkbtn:hover{background:var(--yellow)}.linkbtn .arr{font-size:14px}
+    .linkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--white);margin-bottom:7px;text-align:left}.linkrow:hover{background:#fffbe0;border-color:var(--ink)}.linkrow b{font-size:13px}.linkrow small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.linkrow .num{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted)}
+    .evitem{padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:var(--paper);margin-bottom:9px}.evitem .evhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}.evitem .obs{font-size:13.5px;line-height:1.5}.evitem .obs a{text-decoration:underline;word-break:break-all}.evitem .meta{margin-top:8px;color:var(--muted);font-size:11.5px;font-weight:650}
+    .form{margin-top:14px;padding:15px;border:1.5px dashed var(--line);border-radius:3px;background:var(--white)}.form .fr{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}.form label{display:block;font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}.form input,.form select,.form textarea{width:100%;padding:9px 11px;border:1.5px solid var(--ink);border-radius:3px;font:inherit;font-size:13px;font-weight:600;background:var(--white)}.form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--orange)}.form textarea{resize:vertical;min-height:64px}.form .btnrow{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}
+    .btn{padding:10px 15px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12.5px;font-weight:850}.btn:hover{background:#f4f4ee}.btn.go{background:var(--ink);color:var(--yellow)}.btn.go:hover{background:var(--orange);color:var(--ink)}
+    .decide{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:11px}.decide .btn.go{background:var(--green-ink);border-color:var(--green-ink);color:#fff}.decide .btn.go:hover{background:#2c8a5e}.decide .btn.warn{border-color:var(--amber-ink);color:var(--amber-ink)}.decide .btn.warn:hover{background:#ffe1c4}
+    .dhistory .evitem{background:var(--white)}
+    .note-line{margin-top:11px;font-size:11.5px;color:var(--muted);font-style:italic}
+    .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:var(--ink);color:var(--yellow);padding:13px 19px;border-radius:3px;font-size:13.5px;font-weight:800;z-index:80;transition:transform .25s;max-width:calc(100vw - 40px)}.toast.show{transform:translate(-50%,0)}
+    .spin{display:inline-block;width:15px;height:15px;border:2.5px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:8px}@keyframes spin{to{transform:rotate(360deg)}}
+    footer{margin-top:70px;padding:26px 0;background:var(--ink);color:#d7d7d0;font-size:12.5px}.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.footer-brand{color:var(--yellow);font-size:18px;font-weight:900;letter-spacing:-.05em}.footer-inner a{text-decoration:underline}
+    @media(max-width:860px){.shell{width:min(100% - 32px,1180px)}.nav{height:66px;flex-wrap:wrap}.nav-links a:not(.nav-cta){display:none}.brand{width:150px;height:44px}.brand img{width:174px;margin:-22px 0 0 -17px}.officer input{width:110px}.hero-inner{grid-template-columns:1fr;padding:40px 0 46px;gap:26px}.hero:after{right:-430px;top:210px}.stats{grid-template-columns:repeat(2,1fr)}.facts,.addrcmp,.form .fr,.decide{grid-template-columns:1fr}.dhead h2{font-size:20px}.footer-inner{align-items:flex-start;flex-direction:column;gap:8px}}
+  </style>
+</head>
+<body>
+  <header class="shell nav">
+    <a class="brand" href="/" aria-label="VerifyLocal home"><img src="/img/logo.png" alt="VerifyLocal"></a>
+    <nav class="nav-links" aria-label="Workspace navigation">
+      <a class="active" href="#queue">Review queue</a>
+      <a href="#verified">Verified layer</a>
+      <a href="/api/businesses/verified/export">Open data</a>
+      <span class="officer">Officer <input id="officer" placeholder="Your name" autocomplete="name"></span>
+      <a class="nav-cta" href="/">Back to site →</a>
+    </nav>
+  </header>
+
+  <section class="hero"><div class="shell hero-inner">
+    <div>
+      <div class="eyebrow"><i></i> Schoten · KBO snapshot 7 September 2026</div>
+      <h1>Every record.<br>One workspace.</h1>
+      <p>Everything the register knows about a business, next to the evidence you gather yourself. Check it, correct it, approve it — only confirmed records are published.</p>
+      <p class="attr">publieke KBO gegevens, verrijkt met adressen uit het Vlaamse Adressenregister</p>
+    </div>
+    <div class="stat-card" aria-label="Workspace statistics">
+      <div class="stat-top"><span>Schoten business register</span><span class="live">Loaded</span></div>
+      <div class="stats">
+        <div class="stat"><b id="m-records">…</b><span>records mapped</span></div>
+        <div class="stat"><b id="m-review">…</b><span>need a look</span></div>
+        <div class="stat"><b id="m-evidence">…</b><span>evidence items</span></div>
+        <div class="stat"><b id="m-verified">…</b><span>verified records</span></div>
+      </div>
+    </div>
+  </div></section>
+
+  <main class="shell" id="queue">
+    <div class="toolbar"><div class="shell toolbar-inner">
+      <div class="search"><span>⌕</span><input id="q" placeholder="Search name, address or registry number…" aria-label="Search records"><kbd>/</kbd></div>
+      <select class="street" id="street" aria-label="Filter by street"><option value="">All streets</option></select>
+    </div>
+    <div class="shell chips" id="chips"></div></div>
+
+    <div class="count-line"><h2 id="queue-title">Review queue</h2><span id="queue-sub">…</span></div>
+    <div class="tblwrap" id="tblwrap">
+      <div class="thead"><span>Address</span><span>Business</span><span>Register</span><span>Evidence</span><span>Certainty</span><span>Proposal</span><span></span></div>
+      <div id="tbody"><div class="empty"><span class="spin"></span>Loading the Schoten register…</div></div>
+    </div>
+    <button class="more" id="more" hidden>Show more records</button>
+
+    <section class="vlayer" id="verified">
+      <div class="vhead">
+        <div><h2>Verified layer</h2><p>Records an officer has confirmed with evidence. This is the publishable layer — download it as open data or hand it to your own systems.</p></div>
+        <a class="button gold" href="/api/businesses/verified/export">Download CSV <span>↓</span></a>
+      </div>
+      <div class="vtable" id="vtable"><div class="empty">No confirmed records yet — confirm records in the review queue and they appear here.</div></div>
+    </section>
+  </main>
+
+  <div class="backdrop" id="backdrop"></div>
+  <aside class="drawer" id="drawer" aria-label="Record detail"></aside>
+  <div class="toast" id="toast"></div>
+
+  <footer><div class="shell footer-inner">
+    <span class="footer-brand">VerifyLocal</span>
+    <span>Source: <a href="https://www.vlaanderen.be/datavindplaats/catalogus/vkbo-ondernemingen-en-vestigingseenheden-v3" target="_blank" rel="noopener">publieke KBO gegevens, verrijkt met adressen uit het Vlaamse Adressenregister</a> · Digitaal Vlaanderen · Modellicentie Gratis Hergebruik v1.0</span>
+    <span>Partial sample: first 1,000 of ±33,000 Schoten entries</span>
+  </div></footer>
+
+<script>
+const state={rows:[],verified:[],chip:'look',search:'',street:'',limit:250,openId:null};
+const SIGNAL={POSSIBLY_INACTIVE:['POSSIBLY INACTIVE','orange'],ADDRESS_CHECK:['CHECK ADDRESS',''],NEW_REGISTRATION:['NEW BUSINESS','green'],UNVERIFIED:['NO EVIDENCE','ghost'],EVIDENCE_REVIEW:['EVIDENCE TO REVIEW','']};
+const DECISION={CONFIRMED:['VERIFIED','green'],REJECTED:['REJECTED','ink'],NEEDS_FOLLOW_UP:['FOLLOW-UP','orange'],PENDING:['PENDING','ghost']};
+const CONF={HIGH:['High','#1f6b46'],MEDIUM:['Medium','#9b4400'],LOW:['Low','#8a8a83']};
+const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',OTHER:'Other'};
+const CHIPS=[
+  {id:'look',label:'Needs a look',test:r=>r.decisionStatus==='PENDING'},
+  {id:'inactive',label:'Possibly inactive',test:r=>r.signal==='POSSIBLY_INACTIVE'},
+  {id:'address',label:'Check address',test:r=>r.signal==='ADDRESS_CHECK'},
+  {id:'new',label:'New business',test:r=>r.signal==='NEW_REGISTRATION'},
+  {id:'review',label:'Evidence to review',test:r=>r.signal==='EVIDENCE_REVIEW'},
+  {id:'verified',label:'Verified',test:r=>r.decisionStatus==='CONFIRMED'},
+  {id:'all',label:'All records',test:()=>true}
+];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=iso=>iso?new Date(iso+(iso.length===10?'T00:00:00':'')).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
+const fmtStamp=iso=>iso?new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+const tag=(label,cls)=>`<span class="tag ${cls}">${esc(label)}</span>`;
+const officer=()=>($('officer').value.trim()||'Officer');
+let toastTimer;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
+function val(v){return v&&String(v).trim()?String(v).trim():'';}
+
+async function api(path,opts){
+  const res=await fetch(path,opts);
+  if(!res.ok)throw new Error('Request failed ('+res.status+')');
+  return res.status===201?res.json():(res.status===204?null:res.json());
+}
+
+async function loadAll(){
+  const[biz,meta,ver]=await Promise.all([api('/api/businesses'),api('/api/businesses/meta'),api('/api/businesses/verified/list')]);
+  state.rows=biz;state.verified=ver;
+  $('m-records').textContent=meta.records.toLocaleString();
+  $('m-review').textContent=meta.needsReview.toLocaleString();
+  $('m-evidence').textContent=meta.evidenceItems.toLocaleString();
+  $('m-verified').textContent=meta.verified.toLocaleString();
+  buildStreets();renderChips();render();renderVerified();
+}
+function buildStreets(){
+  const counts={};for(const r of state.rows)counts[r.street]=(counts[r.street]||0)+1;
+  const sel=$('street');sel.innerHTML='<option value="">All streets</option>'+Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+    .map(([s,n])=>`<option value="${esc(s)}">${esc(s)} (${n})</option>`).join('');
+  sel.value=state.street;
+}
+function renderChips(){
+  $('chips').innerHTML=CHIPS.map(c=>{
+    const n=state.rows.filter(r=>c.test(r)).length;
+    return `<button class="chip ${state.chip===c.id?'on':''}" data-chip="${c.id}">${c.label}<small>${n}</small></button>`;
+  }).join('');
+  document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{state.chip=b.dataset.chip;state.limit=250;renderChips();render();}));
+}
+function filtered(){
+  const chip=CHIPS.find(c=>c.id===state.chip);
+  const q=state.search.toLowerCase();
+  return state.rows.filter(r=>chip.test(r)
+    &&(!state.street||r.street===state.street)
+    &&(!q||(r.name+' '+r.address+' '+r.registryNumber+' '+(r.parentRegistryNumber||'')).toLowerCase().includes(q)));
+}
+function rowHtml(r){
+  const s=SIGNAL[r.signal]||['—','ghost'];
+  const d=DECISION[r.decisionStatus]||['—','ghost'];
+  const c=CONF[r.confidence]||['—','#8a8a83'];
+  const legal=r.legalStatus;
+  const decided=r.decisionStatus!=='PENDING';
+  return `<div class="trow" data-id="${esc(r.registryNumber)}">
+    <div class="addr"><b>${esc(r.street||'—')} ${esc(r.houseNumber||'')}</b><small>2900 Schoten</small></div>
+    <div class="biz"><b>${esc(r.name)}</b><small>${r.recordType==='ESTABLISHMENT'?'Vestiging (establishment)':'Legal entity'} · ${esc(r.registryNumber)}${r.parentRegistryNumber?' · parent '+esc(r.parentRegistryNumber):''}</small></div>
+    <div class="reg"><span class="legal ${legal?'':'none'}">${esc(legal||'—')}</span><div class="tagline" style="margin-top:5px">${tag(s[0],s[1])}</div></div>
+    <div class="evi"><b>${r.evidenceCount} item${r.evidenceCount===1?'':'s'}</b><small>${r.lastObservedOn?'observed '+fmtDate(r.lastObservedOn):'no evidence yet'}</small></div>
+    <div class="conf"><i style="background:${c[1]}"></i>${c[0]}</div>
+    <div class="prop">${decided?esc(r.proposal)+`<div class="tagline">${tag(d[0],d[1])}</div>`:esc(r.proposal)}</div>
+    <button class="reviewbtn">Review</button>
+  </div>`;
+}
+function render(){
+  const rows=filtered();
+  const shown=rows.slice(0,state.limit);
+  $('tbody').innerHTML=shown.length?shown.map(rowHtml).join(''):'<div class="empty">No records match — adjust the search or filters.</div>';
+  $('more').hidden=rows.length<=state.limit;
+  $('queue-sub').textContent=rows.length===state.rows.length
+    ?rows.length.toLocaleString()+' records · everything on the table'
+    :'showing '+shown.length.toLocaleString()+' of '+rows.length.toLocaleString()+' records';
+  document.querySelectorAll('.trow').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
+}
+function renderVerified(){
+  const v=state.verified;
+  if(!v.length){$('vtable').innerHTML='<div class="empty">No confirmed records yet — confirm records in the review queue and they appear here.</div>';return;}
+  $('vtable').innerHTML='<div class="vhead-row"><span>Business</span><span>Registry no.</span><span>Officer</span><span>Confirmed</span><span>Note</span></div>'
+    +v.map(x=>{
+      const row=state.rows.find(r=>r.registryNumber===x.registryNumber);
+      return `<div class="vrow"><b>${esc(row?row.name:x.registryNumber)}</b><span>${esc(x.registryNumber)}</span><span>${esc(x.officer)}</span><span>${fmtStamp(x.verifiedAt)}</span><small>${esc(x.note)}</small></div>`;
+    }).join('');
+}
+
+async function openDetail(id){
+  state.openId=id;
+  const d=await api('/api/businesses/'+encodeURIComponent(id));
+  const r=d.record;
+  const s=SIGNAL[d.signal]||['—','ghost'];
+  const dec=DECISION[d.decisionStatus]||['—','ghost'];
+  const kboAddr=[r.kboStreet,r.kboHouseNumber,r.kboBusNumber].filter(val).join(' ')+'<br>'+(r.kboPostcode||'')+' '+(r.municipality||'');
+  const arAddr=r.addressStreet?[r.addressStreet,r.addressHouseNumber,r.addressBusNumber].filter(val).join(' ')+'<br>'+(r.addressPostcode||'')+' '+(r.municipality||''):'<span class="none">No match</span>';
+  const arTag=!r.addressStreet?tag('NO MATCH','ghost'):(kboDiffers(r)?tag('DIFFERS','orange'):tag('MATCH','green'));
+  const mapQ=(r.latitude&&r.longitude?r.latitude+','+r.longitude:(r.officialName||r.tradeName||'')+' '+d.address);
+  const q=encodeURIComponent((r.tradeName||r.officialName||r.registryNumber)+' Schoten');
+  const parentHtml=d.parent
+    ?`<button class="linkrow" data-open="${esc(d.parent.registryNumber)}"><span><b>${esc(d.parent.officialName||d.parent.tradeName)}</b><small>Parent enterprise (registered seat)</small></span><span class="num">${esc(d.parent.registryNumber)} →</span></button>`
+    :(r.parentRegistryNumber?`<div class="linkrow" style="cursor:default"><span><b>Parent enterprise ${esc(r.parentRegistryNumber)}</b><small>Registered seat elsewhere — not in this sample. Look it up in the federal register.</small></span><a class="linkbtn" target="_blank" rel="noopener" href="https://kbopub.economie.fgov.be/kbopub/zoeknummer.html?nummer=${esc(r.parentRegistryNumber)}">KBO <span class="arr">↗</span></a></div>`:'');
+  const kidsHtml=(d.establishments||[]).map(e=>`<button class="linkrow" data-open="${esc(e.registryNumber)}"><span><b>${esc(e.name)}</b><small>${esc(e.address)}</small></span><span class="num">${esc(e.registryNumber)} →</span></button>`).join('');
+  const sameHtml=(d.atSameAddress||[]).map(e=>`<button class="linkrow" data-open="${esc(e.registryNumber)}"><span><b>${esc(e.name)}</b><small>${e.recordType==='ESTABLISHMENT'?'Vestiging':'Legal entity'}</small></span><span class="num">${esc(e.registryNumber)} →</span></button>`).join('');
+  const eviHtml=(d.evidence||[]).map(e=>`<div class="evitem"><div class="evhead">${tag(SOURCE[e.sourceType]||e.sourceType,'')}<small style="color:var(--muted);font-weight:700">${fmtDate(e.observedOn)}</small></div><div class="obs">${esc(e.observation)}${e.sourceUrl?` · <a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">source ↗</a>`:''}</div><div class="meta">Recorded by ${esc(e.officer)} · ${fmtStamp(e.capturedAt)}</div></div>`).join('')||'<div class="empty" style="padding:22px">No evidence recorded yet — add the first observation below.</div>';
+  const histHtml=(d.decisions||[]).map(x=>`<div class="evitem"><div class="evhead">${tag((DECISION[x.status]||[x.status])[0],(DECISION[x.status]||['','ghost'])[1])}<small style="color:var(--muted);font-weight:700">${fmtStamp(x.decidedAt)}</small></div><div class="obs" style="font-size:12.5px">${esc(x.note)}</div><div class="meta">${esc(x.officer)}</div></div>`).join('')||'<div class="empty" style="padding:22px">No decisions yet.</div>';
+  $('drawer').innerHTML=`
+    <div class="dhead">
+      <button class="close" id="dclose" aria-label="Close">✕</button>
+      <div class="num">${esc(d.registryNumber)}${r.parentRegistryNumber?' · parent '+esc(r.parentRegistryNumber):''}</div>
+      <h2>${esc(d.name)}</h2>
+      <div class="tags">${r.recordType==='ESTABLISHMENT'?tag('VESTIGING','ink'):tag('LEGAL ENTITY','ink')}${tag(s[0],s[1])}${d.decisionStatus!=='PENDING'?tag(dec[0],dec[1]):''}</div>
+      <div class="loc">${esc(d.address)}</div>
+    </div>
+    <div class="dsec">
+      <div class="dtitle"><i></i> Register facts (KBO)</div>
+      <div class="facts">
+        <div class="fact"><span>Legal status</span><b class="${r.legalStatus?'':'none'}">${esc(r.legalStatus||'Not recorded (establishment)')}</b></div>
+        <div class="fact"><span>Legal form</span><b class="${r.legalForm?'':'none'}">${esc(r.legalForm||'—')}</b></div>
+        <div class="fact"><span>Registered on</span><b class="${r.registrationDate?'':'none'}">${r.registrationDate?fmtDate(r.registrationDate):'—'}</b></div>
+        <div class="fact"><span>Active since</span><b class="${r.startDate?'':'none'}">${r.startDate?fmtDate(r.startDate):'—'}</b></div>
+        <div class="fact"><span>Cessation date</span><b class="${r.cessationDate?'':'none'}">${r.cessationDate?fmtDate(r.cessationDate):'None recorded'}</b></div>
+        <div class="fact"><span>Main activity</span><b class="${r.activityDescription?'':'none'}">${esc(r.activityDescription||'Not in register (VAT/RSZ codes empty)')}</b></div>
+      </div>
+      <div class="addrcmp">
+        <div class="addrcard"><span>Register address (KBO) <i></i></span><b>${kboAddr}</b></div>
+        <div class="addrcard"><span>Address register (AR) ${arTag}</span><b>${arAddr}</b></div>
+      </div>
+    </div>
+    ${(parentHtml||kidsHtml)?`<div class="dsec"><div class="dtitle"><i></i> Enterprise &amp; establishments</div>${parentHtml}${kidsHtml}</div>`:''}
+    ${sameHtml?`<div class="dsec"><div class="dtitle"><i></i> Also registered at this address</div>${sameHtml}</div>`:''}
+    <div class="dsec">
+      <div class="dtitle"><i></i> Contact &amp; external checks</div>
+      <div class="facts" style="margin-bottom:13px">
+        <div class="fact"><span>Phone</span><b class="${r.phone?'':'none'}">${r.phone?`<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:'Not in register'}</b></div>
+        <div class="fact"><span>E-mail</span><b class="${r.email?'':'none'}">${r.email?`<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`:'Not in register'}</b></div>
+      </div>
+      <div class="links">
+        <a class="linkbtn" target="_blank" rel="noopener" href="https://www.google.com/search?q=${q}">Search the web <span class="arr">↗</span></a>
+        <a class="linkbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQ)}">View on map <span class="arr">↗</span></a>
+        <a class="linkbtn" target="_blank" rel="noopener" href="https://kbopub.economie.fgov.be/kbopub/zoeknummer.html?nummer=${esc(r.registryNumber)}">KBO register <span class="arr">↗</span></a>
+        ${r.annualAccountUrl?`<a class="linkbtn" target="_blank" rel="noopener" href="${esc(r.annualAccountUrl)}">Annual accounts (NBB) <span class="arr">↗</span></a>`:''}
+      </div>
+    </div>
+    <div class="dsec">
+      <div class="dtitle"><i></i> Evidence of activity (${d.evidence.length})</div>
+      ${eviHtml}
+      <form class="form" id="evform">
+        <div class="fr">
+          <div><label>Source</label><select id="evtype">${Object.entries(SOURCE).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
+          <div><label>Observed on</label><input type="date" id="evdate" value="${new Date().toISOString().slice(0,10)}"></div>
+        </div>
+        <div style="margin-bottom:9px"><label>Source URL (optional)</label><input id="evurl" placeholder="https://…"></div>
+        <div style="margin-bottom:9px"><label>What did you observe?</label><textarea id="evobs" placeholder="e.g. Website active, opening hours confirmed on the door…"></textarea></div>
+        <div class="btnrow"><button type="submit" class="btn go">Add evidence</button></div>
+      </form>
+    </div>
+    <div class="dsec dhistory">
+      <div class="dtitle"><i></i> Officer decision</div>
+      <div class="obs" style="font-size:13px;line-height:1.5;margin-bottom:4px"><b>${esc(d.proposal)}</b> — ${esc(d.reason)}</div>
+      <form id="decform">
+        <div class="form" style="margin-top:9px;border-style:solid">
+          <div style="margin-bottom:9px"><label>Decision note (required)</label><textarea id="decnote" placeholder="Why this decision? What did you check?"></textarea></div>
+          <div class="decide">
+            <button type="button" class="btn go" data-status="CONFIRMED">✓ Confirm</button>
+            <button type="button" class="btn warn" data-status="NEEDS_FOLLOW_UP">Follow up</button>
+            <button type="button" class="btn" data-status="REJECTED">✕ Reject</button>
+          </div>
+        </div>
+      </form>
+      <div class="note-line">Only confirmed records are published to the verified layer.</div>
+      <div style="margin-top:13px">${histHtml}</div>
+    </div>`;
+  $('drawer').classList.add('open');$('backdrop').classList.add('open');$('drawer').scrollTop=0;
+  document.body.style.overflow='hidden';
+  $('dclose').addEventListener('click',closeDetail);
+  document.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',ev=>{ev.stopPropagation();openDetail(el.dataset.open);}));
+  $('evform').addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    const body={sourceType:$('evtype').value,sourceUrl:$('evurl').value,observation:$('evobs').value,observedOn:$('evdate').value,officer:officer()};
+    if(!body.observation.trim()||!body.observedOn){toast('Observation and date are required');return;}
+    try{
+      await api('/api/businesses/'+encodeURIComponent(state.openId)+'/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      toast('Evidence added');await refresh();openDetail(state.openId);
+    }catch(e){toast(e.message);}
+  });
+  document.querySelectorAll('#decform .decide .btn').forEach(b=>b.addEventListener('click',async()=>{
+    const note=$('decnote').value;
+    if(!note.trim()){toast('A decision note is required');return;}
+    try{
+      await api('/api/businesses/'+encodeURIComponent(state.openId)+'/decisions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:b.dataset.status,note,officer:officer()})});
+      toast(b.dataset.status==='CONFIRMED'?'Confirmed — published to the verified layer':b.dataset.status==='REJECTED'?'Rejected — not published':'Marked for follow-up');
+      await refresh();openDetail(state.openId);
+    }catch(e){toast(e.message);}
+  }));
+}
+function kboDiffers(r){
+  return (val(r.kboStreet)||'').toLowerCase()!==(val(r.addressStreet)||'').toLowerCase()
+    ||(val(r.kboHouseNumber)||'').toLowerCase()!==(val(r.addressHouseNumber)||'').toLowerCase();
+}
+function closeDetail(){state.openId=null;$('drawer').classList.remove('open');$('backdrop').classList.remove('open');document.body.style.overflow='';}
+async function refresh(){
+  const[biz,ver]=await Promise.all([api('/api/businesses'),api('/api/businesses/verified/list')]);
+  state.rows=biz;state.verified=ver;
+  const meta=await api('/api/businesses/meta');
+  $('m-review').textContent=meta.needsReview.toLocaleString();
+  $('m-verified').textContent=meta.verified.toLocaleString();
+  $('m-evidence').textContent=meta.evidenceItems.toLocaleString();
+  renderChips();render();renderVerified();
+}
+
+$('q').addEventListener('input',e=>{state.search=e.target.value;state.limit=250;render();});
+$('street').addEventListener('change',e=>{state.street=e.target.value;state.limit=250;render();});
+$('more').addEventListener('click',()=>{state.limit+=250;render();});
+$('backdrop').addEventListener('click',closeDetail);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeDetail();
+  if(e.key==='/'&&document.activeElement!==$('q')&&!$('drawer').classList.contains('open')){e.preventDefault();$('q').focus();}
+});
+$('officer').value=localStorage.getItem('vl-officer')||'';
+$('officer').addEventListener('change',()=>localStorage.setItem('vl-officer',$('officer').value.trim()));
+loadAll().catch(()=>{$('tbody').innerHTML='<div class="empty">Could not load the register. Is the server running? <a href="/app" style="text-decoration:underline">Retry</a></div>';});
+</script>
+</body>
+</html>

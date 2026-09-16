@@ -43,8 +43,7 @@
     .addrcmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.addrcard{border:1px solid var(--line);border-radius:3px;padding:11px 13px;background:var(--paper)}.addrcard span{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.addrcard b{font-size:13px;font-weight:700;line-height:1.45}
     .links{display:flex;flex-wrap:wrap;gap:8px}.linkbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12px;font-weight:800;color:var(--ink)}.linkbtn:hover{background:var(--yellow)}.linkbtn .arr{font-size:14px}
     .linkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--white);margin-bottom:7px;text-align:left}.linkrow:hover{background:#fffbe0;border-color:var(--ink)}.linkrow b{font-size:13px}.linkrow small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.linkrow .num{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted)}
-    .evitem{padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:var(--paper);margin-bottom:9px}.evitem .evhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}    .evitem .obs{font-size:13.5px;line-height:1.5}.evitem .obs a{text-decoration:underline;word-break:break-all}.evitem .meta{margin-top:8px;color:var(--muted);font-size:11.5px;font-weight:650}
-    .md p{margin:0 0 7px}.md p:last-child{margin-bottom:0}.md ul{margin:0 0 7px;padding-left:18px}.md li{margin:2.5px 0}.md .mdh{font-weight:850;margin:11px 0 5px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.md code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--soft);padding:1px 5px;border-radius:3px}.md a{text-decoration:underline;word-break:break-all}
+    .evitem{padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:var(--paper);margin-bottom:9px}.evitem .evhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}.evitem .obs{font-size:13.5px;line-height:1.5}.evitem .obs a{text-decoration:underline;word-break:break-all}.evitem .meta{margin-top:8px;color:var(--muted);font-size:11.5px;font-weight:650}
     .form{margin-top:14px;padding:15px;border:1.5px dashed var(--line);border-radius:3px;background:var(--white)}.form .fr{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}.form label{display:block;font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}.form input,.form select,.form textarea{width:100%;padding:9px 11px;border:1.5px solid var(--ink);border-radius:3px;font:inherit;font-size:13px;font-weight:600;background:var(--white)}.form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--orange)}.form textarea{resize:vertical;min-height:64px}.form .btnrow{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}
     .btn{padding:10px 15px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12.5px;font-weight:850}.btn:hover{background:#f4f4ee}.btn.go{background:var(--ink);color:var(--yellow)}.btn.go:hover{background:var(--orange);color:var(--ink)}
     .decide{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:11px}.decide .btn.go{background:var(--green-ink);border-color:var(--green-ink);color:#fff}.decide .btn.go:hover{background:#2c8a5e}.decide .btn.warn{border-color:var(--amber-ink);color:var(--amber-ink)}.decide .btn.warn:hover{background:#ffe1c4}
@@ -124,7 +123,7 @@ const state={rows:[],verified:[],chip:'look',search:'',street:'',limit:250,openI
 const SIGNAL={POSSIBLY_INACTIVE:['POSSIBLY INACTIVE','orange'],ADDRESS_CHECK:['CHECK ADDRESS',''],NEW_REGISTRATION:['NEW BUSINESS','green'],UNVERIFIED:['NO EVIDENCE','ghost'],EVIDENCE_REVIEW:['EVIDENCE TO REVIEW','']};
 const DECISION={CONFIRMED:['VERIFIED','green'],REJECTED:['REJECTED','ink'],NEEDS_FOLLOW_UP:['FOLLOW-UP','orange'],PENDING:['PENDING','ghost']};
 const CONF={HIGH:['High','#1f6b46'],MEDIUM:['Medium','#9b4400'],LOW:['Low','#8a8a83']};
-const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',AI_CHECK:'AI website check',OTHER:'Other'};
+const SOURCE={WEBSITE:'Website',GOOGLE_MAPS:'Google Maps',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',OTHER:'Other'};
 const CHIPS=[
   {id:'look',label:'Needs a look',test:r=>r.decisionStatus==='PENDING'},
   {id:'inactive',label:'Possibly inactive',test:r=>r.signal==='POSSIBLY_INACTIVE'},
@@ -136,26 +135,6 @@ const CHIPS=[
 ];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const mdInline=t=>t
-  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-  .replace(/(^|[\s(])\*([^*\s][^*\n]*)\*/g,'$1<em>$2</em>')
-  .replace(/`([^`]+)`/g,'<code>$1</code>')
-  .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-const md=s=>{
-  const lines=esc(s).split('\n');
-  let out='',list=false;
-  const closeList=()=>{if(list){out+='</ul>';list=false;}};
-  for(const line of lines){
-    const h=line.match(/^(#{1,4})\s+(.*)$/);
-    const b=line.match(/^\s*[-*•]\s+(.*)$/);
-    if(h){closeList();out+=`<div class="mdh">${mdInline(h[2])}</div>`;}
-    else if(b){if(!list){out+='<ul>';list=true;}out+=`<li>${mdInline(b[1])}</li>`;}
-    else if(line.trim()){closeList();out+=`<p>${mdInline(line)}</p>`;}
-    else closeList();
-  }
-  closeList();
-  return out;
-};
 const fmtDate=iso=>iso?new Date(iso+(iso.length===10?'T00:00:00':'')).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
 const fmtStamp=iso=>iso?new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
 const tag=(label,cls)=>`<span class="tag ${cls}">${esc(label)}</span>`;
@@ -252,7 +231,7 @@ async function openDetail(id){
     :(r.parentRegistryNumber?`<div class="linkrow" style="cursor:default"><span><b>Parent enterprise ${esc(r.parentRegistryNumber)}</b><small>Registered seat elsewhere — not in this sample. Look it up in the federal register.</small></span><a class="linkbtn" target="_blank" rel="noopener" href="https://kbopub.economie.fgov.be/kbopub/zoeknummer.html?nummer=${esc(r.parentRegistryNumber)}">KBO <span class="arr">↗</span></a></div>`:'');
   const kidsHtml=(d.establishments||[]).map(e=>`<button class="linkrow" data-open="${esc(e.registryNumber)}"><span><b>${esc(e.name)}</b><small>${esc(e.address)}</small></span><span class="num">${esc(e.registryNumber)} →</span></button>`).join('');
   const sameHtml=(d.atSameAddress||[]).map(e=>`<button class="linkrow" data-open="${esc(e.registryNumber)}"><span><b>${esc(e.name)}</b><small>${e.recordType==='ESTABLISHMENT'?'Vestiging':'Legal entity'}</small></span><span class="num">${esc(e.registryNumber)} →</span></button>`).join('');
-  const eviHtml=(d.evidence||[]).map(e=>`<div class="evitem"><div class="evhead">${tag(SOURCE[e.sourceType]||e.sourceType,'')}<small style="color:var(--muted);font-weight:700">${fmtDate(e.observedOn)}</small></div><div class="obs md">${md(e.observation)}</div><div class="meta">Recorded by ${esc(e.officer)} · ${fmtStamp(e.capturedAt)}${e.sourceUrl?` · <a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">source ↗</a>`:''}</div></div>`).join('')||'<div class="empty" style="padding:22px">No evidence recorded yet — add the first observation below.</div>';
+  const eviHtml=(d.evidence||[]).map(e=>`<div class="evitem"><div class="evhead">${tag(SOURCE[e.sourceType]||e.sourceType,'')}<small style="color:var(--muted);font-weight:700">${fmtDate(e.observedOn)}</small></div><div class="obs">${esc(e.observation)}${e.sourceUrl?` · <a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">source ↗</a>`:''}</div><div class="meta">Recorded by ${esc(e.officer)} · ${fmtStamp(e.capturedAt)}</div></div>`).join('')||'<div class="empty" style="padding:22px">No evidence recorded yet — add the first observation below.</div>';
   const histHtml=(d.decisions||[]).map(x=>`<div class="evitem"><div class="evhead">${tag((DECISION[x.status]||[x.status])[0],(DECISION[x.status]||['','ghost'])[1])}<small style="color:var(--muted);font-weight:700">${fmtStamp(x.decidedAt)}</small></div><div class="obs" style="font-size:12.5px">${esc(x.note)}</div><div class="meta">${esc(x.officer)}</div></div>`).join('')||'<div class="empty" style="padding:22px">No decisions yet.</div>';
   $('drawer').innerHTML=`
     <div class="dhead">
@@ -291,16 +270,6 @@ async function openDetail(id){
         <a class="linkbtn" target="_blank" rel="noopener" href="https://kbopub.economie.fgov.be/kbopub/zoeknummer.html?nummer=${esc(r.registryNumber)}">KBO register <span class="arr">↗</span></a>
         ${r.annualAccountUrl?`<a class="linkbtn" target="_blank" rel="noopener" href="${esc(r.annualAccountUrl)}">Annual accounts (NBB) <span class="arr">↗</span></a>`:''}
       </div>
-    </div>
-    <div class="dsec">
-      <div class="dtitle"><i></i> AI website check</div>
-      <form class="form" id="aiform" style="border-style:solid">
-        <div style="margin-bottom:9px"><label>Website URL</label><input id="aiurl" placeholder="https://www.example-business.be"></div>
-        <div style="margin-bottom:9px"><label>Question (optional)</label><input id="aiq" placeholder="Does this website show a currently active business?"></div>
-        <div class="btnrow"><button type="submit" class="btn go" id="aibtn">Run AI check</button></div>
-      </form>
-      <div id="airesult" hidden></div>
-      <div class="note-line">Scrapes the website and has an AI model (via OpenRouter) judge the content. The answer is saved as evidence on this record.</div>
     </div>
     <div class="dsec">
       <div class="dtitle"><i></i> Evidence of activity (${d.evidence.length})</div>
@@ -343,26 +312,6 @@ async function openDetail(id){
       await api('/api/businesses/'+encodeURIComponent(state.openId)+'/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       toast('Evidence added');await refresh();openDetail(state.openId);
     }catch(e){toast(e.message);}
-  });
-  $('aiform').addEventListener('submit',async ev=>{
-    ev.preventDefault();
-    const url=$('aiurl').value.trim();
-    if(!(url.startsWith('http://')||url.startsWith('https://'))){toast('Enter a valid http(s) website URL');return;}
-    const btn=$('aibtn');btn.disabled=true;btn.textContent='Checking… (can take a minute)';
-    try{
-      const res=await fetch('/api/ai/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,question:$('aiq').value.trim(),registryNumber:state.openId})});
-      let out=null;
-      if(!res.ok){
-        try{const j=await res.json();out=j.message||j.detail;}catch(_){}
-        throw new Error(out||'AI check failed ('+res.status+')');
-      }
-      out=await res.json();
-      const box=$('airesult');box.hidden=false;
-      box.innerHTML=`<div class="evitem" style="margin-top:12px"><div class="evhead">${tag('AI ANSWER','ink')}<small style="color:var(--muted);font-weight:700">${esc(out.model)}</small></div><div class="obs md">${md(out.answer)}</div>${out.reasoning?`<details style="margin-top:8px"><summary style="font-size:11.5px;color:var(--muted);font-weight:700;cursor:pointer">Model reasoning</summary><div class="meta" style="margin-top:6px;white-space:pre-wrap">${esc(out.reasoning)}</div></details>`:''}<div class="meta">Saved as AI_CHECK evidence on ${esc(out.evidence?out.evidence.registryNumber:state.openId)} · ${fmtStamp(out.analyzedAt)}</div></div>`;
-      toast('AI answer saved as evidence');
-      await refresh();
-    }catch(e){toast(e.message);}
-    btn.disabled=false;btn.textContent='Run AI check';
   });
   document.querySelectorAll('#decform .decide .btn').forEach(b=>b.addEventListener('click',async()=>{
     const note=$('decnote').value;

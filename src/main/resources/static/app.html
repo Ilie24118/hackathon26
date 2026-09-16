@@ -19,12 +19,11 @@
     .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 14px}.chip{padding:8px 13px;border:1.5px solid var(--ink);border-radius:99px;background:var(--white);font-size:12.5px;font-weight:800;transition:transform .15s}.chip small{margin-left:6px;font-weight:850;opacity:.55}.chip:hover{transform:translateY(-1px)}.chip.on{background:var(--ink);color:var(--yellow)}.chip.on small{opacity:.8}
     .count-line{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:26px 0 12px}.count-line h2{margin:0;font-size:21px;letter-spacing:-.04em}.count-line span{color:var(--muted);font-size:13px;font-weight:650}
     .tblwrap{background:var(--white);border:1.5px solid var(--ink);box-shadow:8px 8px 0 rgba(22,22,22,.08);overflow-x:auto}
-    .thead,.trow{display:grid;grid-template-columns:1fr 1.5fr 1.05fr .95fr 92px 1.2fr 86px;gap:12px;align-items:center;min-width:880px}
+    .thead,.trow{display:grid;grid-template-columns:1fr 1.5fr 1.15fr 92px 1.2fr 86px;gap:12px;align-items:center;min-width:790px}
     .thead{padding:13px 18px;border-bottom:1.5px solid var(--ink);color:var(--muted);font-size:10.5px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;background:var(--paper)}
     .trow{padding:13px 18px;border-top:1px solid var(--soft);font-size:13.5px;cursor:pointer;transition:background .12s}.trow:first-of-type{border-top:0}.trow:hover{background:#fffbe0}
     .addr b{display:block;font-weight:700}.addr small,.cell small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
     .biz b{display:block;font-weight:750;letter-spacing:-.01em}.biz small{display:block;margin-top:3px;color:var(--muted);font-size:11px}.biz small a{text-decoration:underline}
-    .reg .legal{font-size:12.5px;color:#3b3b38}.reg .legal.none{color:var(--muted)}
     .evi b{font-weight:750}.evi small,.prop small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
     .conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.conf i{width:8px;height:8px;border-radius:50%}
     .prop{font-size:12.5px;font-weight:650}.prop .tagline{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
@@ -96,7 +95,7 @@
 
     <div class="count-line"><h2 id="queue-title">Review queue</h2><span id="queue-sub">…</span></div>
     <div class="tblwrap" id="tblwrap">
-      <div class="thead"><span>Address</span><span>Business</span><span>Register</span><span>Evidence</span><span>Certainty</span><span>Proposal</span><span></span></div>
+      <div class="thead"><span>Address</span><span>Business</span><span>Evidence</span><span>Certainty</span><span>Proposal</span><span></span></div>
       <div id="tbody"><div class="empty"><span class="spin"></span>Loading the Schoten register…</div></div>
     </div>
     <button class="more" id="more" hidden>Show more records</button>
@@ -125,7 +124,7 @@ const state={rows:[],verified:[],chip:'look',search:'',street:'',limit:250,openI
 const SIGNAL={POSSIBLY_INACTIVE:['POSSIBLY INACTIVE','orange'],ADDRESS_CHECK:['CHECK ADDRESS',''],NEW_REGISTRATION:['NEW BUSINESS','green'],UNVERIFIED:['NO EVIDENCE','ghost'],EVIDENCE_REVIEW:['EVIDENCE TO REVIEW','']};
 const DECISION={CONFIRMED:['VERIFIED','green'],REJECTED:['REJECTED','ink'],NEEDS_FOLLOW_UP:['FOLLOW-UP','orange'],PENDING:['PENDING','ghost']};
 const CONF={HIGH:['High','#1f6b46'],MEDIUM:['Medium','#9b4400'],LOW:['Low','#8a8a83']};
-const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',AI_CHECK:'AI website check',OTHER:'Other'};
+const SOURCE={WEBSITE:'Website',MAP_LISTING:'Map listing',GOOGLE_MAPS:'Google Maps',PUBLIC_LISTING:'Public listing',PERMIT_RECORD:'Permit record',STREET_VISIT:'Street visit',PHONE_CALL:'Phone call',AI_CHECK:'AI website check',OTHER:'Other'};
 const CHIPS=[
   {id:'look',label:'Needs a look',test:r=>r.decisionStatus==='PENDING'},
   {id:'inactive',label:'Possibly inactive',test:r=>r.signal==='POSSIBLY_INACTIVE'},
@@ -208,13 +207,14 @@ function rowHtml(r){
   const s=SIGNAL[r.signal]||['—','ghost'];
   const d=DECISION[r.decisionStatus]||['—','ghost'];
   const c=CONF[r.confidence]||['—','#8a8a83'];
-  const legal=r.legalStatus;
   const decided=r.decisionStatus!=='PENDING';
+  const evidence=r.googleMapsMatch
+    ?`<div class="evi"><span class="tag green">Google Maps match found</span>${r.googleMapsLocation?`<small>${esc(r.googleMapsLocation)}</small>`:''}</div>`
+    :`<div class="evi"><b>${r.evidenceCount} item${r.evidenceCount===1?'':'s'}</b><small>${r.lastObservedOn?'observed '+fmtDate(r.lastObservedOn):'no evidence yet'}</small></div>`;
   return `<div class="trow" data-id="${esc(r.registryNumber)}">
     <div class="addr"><b>${esc(r.street||'—')} ${esc(r.houseNumber||'')}</b><small>2900 Schoten</small></div>
     <div class="biz"><b>${esc(r.name)}</b><small>${r.recordType==='ESTABLISHMENT'?'Vestiging (establishment)':'Legal entity'} · ${esc(r.registryNumber)}${r.parentRegistryNumber?' · parent '+esc(r.parentRegistryNumber):''}</small></div>
-    <div class="reg"><span class="legal ${legal?'':'none'}">${esc(legal||'—')}</span><div class="tagline" style="margin-top:5px">${tag(s[0],s[1])}</div></div>
-    <div class="evi"><b>${r.evidenceCount} item${r.evidenceCount===1?'':'s'}</b><small>${r.lastObservedOn?'observed '+fmtDate(r.lastObservedOn):'no evidence yet'}</small></div>
+    ${evidence}
     <div class="conf"><i style="background:${c[1]}"></i>${c[0]}</div>
     <div class="prop">${decided?esc(r.proposal)+`<div class="tagline">${tag(d[0],d[1])}</div>`:esc(r.proposal)}</div>
     <button class="reviewbtn">Review</button>

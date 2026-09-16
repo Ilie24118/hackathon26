@@ -90,6 +90,7 @@ public class BusinessService {
         m.put("evidenceCount", evidence.size());
         m.put("lastObservedOn", evidence.isEmpty() ? null : evidence.getFirst().getObservedOn());
         Evidence mapsEvidence = evidence.stream().filter(e -> "GOOGLE_MAPS".equals(e.getSourceType())).findFirst().orElse(null);
+        m.put("googleMapsMatch", mapsEvidence != null);
         m.put("googleMapsLocation", mapsEvidence == null ? null : evidenceValue(mapsEvidence.getObservation(), "address"));
         m.put("googleMapsWebsiteDomain", mapsEvidence == null ? null : evidenceValue(mapsEvidence.getObservation(), "websiteDomain"));
         m.put("decisionStatus", decisionStatus);

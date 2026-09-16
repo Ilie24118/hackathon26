@@ -14,41 +14,6 @@ import org.springframework.stereotype.Service;
 public class BusinessService {
     private final BusinessRepository repository;
     public BusinessService(BusinessRepository repository) { this.repository = repository; }
-
-    public void importBundledSnapshot() {
-        try {
-            List<RegistryRecord> records = new ArrayList<>();
-            for (JsonNode feature : new ObjectMapper().readTree(new ClassPathResource("KBO/schoten-kbo-1000-2026-09-07.geojson").getContentAsByteArray()).path("features")) {
-                JsonNode p = feature.path("properties");
-                String parent = text(p, "Ondernemingsnr_maatsch_zetel");
-                JsonNode coords = feature.path("geometry").path("coordinates");
-                records.add(new RegistryRecord(
-                        text(p, "Ondernemingsnr"), parent, parent.isBlank() ? "LEGAL_ENTITY" : "ESTABLISHMENT",
-                        text(p, "Maatschappelijke_naam"), text(p, "Commerciele_naam"), text(p, "Zoeknaam"),
-                        text(p, "Rechtstoestand"), text(p, "Rechtsvorm"),
-                        text(p, "KBO_Straat"), text(p, "KBO_Huisnr"), text(p, "KBO_Busnr"), text(p, "KBO_Postcode"), text(p, "KBO_Gemeente"),
-                        text(p, "AR_straat"), text(p, "AR_huisnr"), text(p, "AR_busnr"), text(p, "AR_postcode"),
-                        firstNonBlank(text(p, "Omschrijving_hoofdact_RSZ"), text(p, "Omschrijving_hoofdact_BTW")),
-                        realDate(text(p, "Datum_inschrijving")), realDate(text(p, "Startdatum")), realDate(text(p, "Datum_stopzetting")),
-                        coords.path(1).asString(""), coords.path(0).asString(""),
-                        text(p, "Telefoonnummer"), text(p, "Email"), text(p, "JAARREK_URL_NBB")));
-            }
-            records.removeIf(r -> r.getRegistryNumber().isBlank());
-            repository.saveRecords(records);
-            seedDemoEvidence();
-        } catch (Exception e) { throw new IllegalStateException("Unable to import bundled KBO snapshot", e); }
-    }
-
-    private void seedDemoEvidence() {
-        if (repository.countEvidence() > 0) return;
-        addDemoEvidence("2286527055", "PUBLIC_LISTING", "https://www.google.com/maps/search/?api=1&query=Trixxo+Paalstraat+73+Schoten", "Curated demo observation: public map listing shows current opening hours for this address.", LocalDate.of(2026, 9, 5));
-        addDemoEvidence("0403750127", "WEBSITE", "", "Curated demo observation: website no longer reachable and no recent listing found; register status is in liquidation.", LocalDate.of(2026, 8, 28));
-        addDemoEvidence("2372012066", "WEBSITE", "", "Curated demo observation: active website mentions the Brechtsebaan address; recently registered.", LocalDate.of(2026, 9, 10));
-    }
-    private void addDemoEvidence(String id, String type, String url, String observation, LocalDate on) {
-        if (repository.find(id).isPresent()) repository.addEvidence(id, type, url, observation, on, "Demo dataset");
-    }
-
     public List<Map<String,Object>> list(String query, String signal, String decision) {
         Map<String,List<Evidence>> evidence = repository.evidenceByRecord();
         Map<String,List<ReviewDecision>> decisions = repository.decisionsByRecord();

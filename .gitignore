@@ -42,3 +42,4 @@ out/
 ### Local-only ###
 .env.local
 AGENTS.md
+.env

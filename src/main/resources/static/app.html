@@ -43,7 +43,8 @@
     .addrcmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.addrcard{border:1px solid var(--line);border-radius:3px;padding:11px 13px;background:var(--paper)}.addrcard span{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.addrcard b{font-size:13px;font-weight:700;line-height:1.45}
     .links{display:flex;flex-wrap:wrap;gap:8px}.linkbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12px;font-weight:800;color:var(--ink)}.linkbtn:hover{background:var(--yellow)}.linkbtn .arr{font-size:14px}
     .linkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--white);margin-bottom:7px;text-align:left}.linkrow:hover{background:#fffbe0;border-color:var(--ink)}.linkrow b{font-size:13px}.linkrow small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.linkrow .num{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted)}
-    .evitem{padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:var(--paper);margin-bottom:9px}.evitem .evhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}.evitem .obs{font-size:13.5px;line-height:1.5}.evitem .obs a{text-decoration:underline;word-break:break-all}.evitem .meta{margin-top:8px;color:var(--muted);font-size:11.5px;font-weight:650}
+    .evitem{padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:var(--paper);margin-bottom:9px}.evitem .evhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}    .evitem .obs{font-size:13.5px;line-height:1.5}.evitem .obs a{text-decoration:underline;word-break:break-all}.evitem .meta{margin-top:8px;color:var(--muted);font-size:11.5px;font-weight:650}
+    .md p{margin:0 0 7px}.md p:last-child{margin-bottom:0}.md ul{margin:0 0 7px;padding-left:18px}.md li{margin:2.5px 0}.md .mdh{font-weight:850;margin:11px 0 5px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.md code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--soft);padding:1px 5px;border-radius:3px}.md a{text-decoration:underline;word-break:break-all}
     .form{margin-top:14px;padding:15px;border:1.5px dashed var(--line);border-radius:3px;background:var(--white)}.form .fr{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}.form label{display:block;font-size:10.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}.form input,.form select,.form textarea{width:100%;padding:9px 11px;border:1.5px solid var(--ink);border-radius:3px;font:inherit;font-size:13px;font-weight:600;background:var(--white)}.form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--orange)}.form textarea{resize:vertical;min-height:64px}.form .btnrow{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}
     .btn{padding:10px 15px;border:1.5px solid var(--ink);border-radius:3px;background:var(--white);font-size:12.5px;font-weight:850}.btn:hover{background:#f4f4ee}.btn.go{background:var(--ink);color:var(--yellow)}.btn.go:hover{background:var(--orange);color:var(--ink)}
     .decide{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:11px}.decide .btn.go{background:var(--green-ink);border-color:var(--green-ink);color:#fff}.decide .btn.go:hover{background:#2c8a5e}.decide .btn.warn{border-color:var(--amber-ink);color:var(--amber-ink)}.decide .btn.warn:hover{background:#ffe1c4}
@@ -135,6 +136,26 @@ const CHIPS=[
 ];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mdInline=t=>t
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/(^|[\s(])\*([^*\s][^*\n]*)\*/g,'$1<em>$2</em>')
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+const md=s=>{
+  const lines=esc(s).split('\n');
+  let out='',list=false;
+  const closeList=()=>{if(list){out+='</ul>';list=false;}};
+  for(const line of lines){
+    const h=line.match(/^(#{1,4})\s+(.*)$/);
+    const b=line.match(/^\s*[-*•]\s+(.*)$/);
+    if(h){closeList();out+=`<div class="mdh">${mdInline(h[2])}</div>`;}
+    else if(b){if(!list){out+='<ul>';list=true;}out+=`<li>${mdInline(b[1])}</li>`;}
+    else if(line.trim()){closeList();out+=`<p>${mdInline(line)}</p>`;}
+    else closeList();
+  }
+  closeList();
+  return out;
+};
 const fmtDate=iso=>iso?new Date(iso+(iso.length===10?'T00:00:00':'')).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
 const fmtStamp=iso=>iso?new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
 const tag=(label,cls)=>`<span class="tag ${cls}">${esc(label)}</span>`;
@@ -231,7 +252,7 @@ async function openDetail(id){
     :(r.parentRegistryNumber?`<div class="linkrow" style="cursor:default"><span><b>Parent enterprise ${esc(r.parentRegistryNumber)}</b><small>Registered seat elsewhere — not in this sample. Look it up in the federal register.</small></span><a class="linkbtn" target="_blank" rel="noopener" href="https://kbopub.economie.fgov.be/kbopub/zoeknummer.html?nummer=${esc(r.parentRegistryNumber)}">KBO <span class="arr">↗</span></a></div>`:'');
   const kidsHtml=(d.establishments||[]).map(e=>`<button class="linkrow" data-open="${esc(e.registryNumber)}"><span><b>${esc(e.name)}</b><small>${esc(e.address)}</small></span><span class="num">${esc(e.registryNumber)} →</span></button>`).join('');
   const sameHtml=(d.atSameAddress||[]).map(e=>`<button class="linkrow" data-open="${esc(e.registryNumber)}"><span><b>${esc(e.name)}</b><small>${e.recordType==='ESTABLISHMENT'?'Vestiging':'Legal entity'}</small></span><span class="num">${esc(e.registryNumber)} →</span></button>`).join('');
-  const eviHtml=(d.evidence||[]).map(e=>`<div class="evitem"><div class="evhead">${tag(SOURCE[e.sourceType]||e.sourceType,'')}<small style="color:var(--muted);font-weight:700">${fmtDate(e.observedOn)}</small></div><div class="obs">${esc(e.observation)}${e.sourceUrl?` · <a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">source ↗</a>`:''}</div><div class="meta">Recorded by ${esc(e.officer)} · ${fmtStamp(e.capturedAt)}</div></div>`).join('')||'<div class="empty" style="padding:22px">No evidence recorded yet — add the first observation below.</div>';
+  const eviHtml=(d.evidence||[]).map(e=>`<div class="evitem"><div class="evhead">${tag(SOURCE[e.sourceType]||e.sourceType,'')}<small style="color:var(--muted);font-weight:700">${fmtDate(e.observedOn)}</small></div><div class="obs md">${md(e.observation)}</div><div class="meta">Recorded by ${esc(e.officer)} · ${fmtStamp(e.capturedAt)}${e.sourceUrl?` · <a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">source ↗</a>`:''}</div></div>`).join('')||'<div class="empty" style="padding:22px">No evidence recorded yet — add the first observation below.</div>';
   const histHtml=(d.decisions||[]).map(x=>`<div class="evitem"><div class="evhead">${tag((DECISION[x.status]||[x.status])[0],(DECISION[x.status]||['','ghost'])[1])}<small style="color:var(--muted);font-weight:700">${fmtStamp(x.decidedAt)}</small></div><div class="obs" style="font-size:12.5px">${esc(x.note)}</div><div class="meta">${esc(x.officer)}</div></div>`).join('')||'<div class="empty" style="padding:22px">No decisions yet.</div>';
   $('drawer').innerHTML=`
     <div class="dhead">
@@ -337,7 +358,7 @@ async function openDetail(id){
       }
       out=await res.json();
       const box=$('airesult');box.hidden=false;
-      box.innerHTML=`<div class="evitem" style="margin-top:12px"><div class="evhead">${tag('AI ANSWER','ink')}<small style="color:var(--muted);font-weight:700">${esc(out.model)}</small></div><div class="obs">${esc(out.answer).replace(/\n/g,'<br>')}</div>${out.reasoning?`<details style="margin-top:8px"><summary style="font-size:11.5px;color:var(--muted);font-weight:700;cursor:pointer">Model reasoning</summary><div class="meta" style="margin-top:6px;white-space:pre-wrap">${esc(out.reasoning)}</div></details>`:''}<div class="meta">Saved as AI_CHECK evidence on ${esc(out.evidence?out.evidence.registryNumber:state.openId)} · ${fmtStamp(out.analyzedAt)}</div></div>`;
+      box.innerHTML=`<div class="evitem" style="margin-top:12px"><div class="evhead">${tag('AI ANSWER','ink')}<small style="color:var(--muted);font-weight:700">${esc(out.model)}</small></div><div class="obs md">${md(out.answer)}</div>${out.reasoning?`<details style="margin-top:8px"><summary style="font-size:11.5px;color:var(--muted);font-weight:700;cursor:pointer">Model reasoning</summary><div class="meta" style="margin-top:6px;white-space:pre-wrap">${esc(out.reasoning)}</div></details>`:''}<div class="meta">Saved as AI_CHECK evidence on ${esc(out.evidence?out.evidence.registryNumber:state.openId)} · ${fmtStamp(out.analyzedAt)}</div></div>`;
       toast('AI answer saved as evidence');
       await refresh();
     }catch(e){toast(e.message);}

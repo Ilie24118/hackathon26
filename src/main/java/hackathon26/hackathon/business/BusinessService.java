@@ -124,8 +124,22 @@ public class BusinessService {
         m.put("signal", signal); m.put("confidence", confidence); m.put("reason", reason); m.put("proposal", proposal);
         m.put("evidenceCount", evidence.size());
         m.put("lastObservedOn", evidence.isEmpty() ? null : evidence.getFirst().getObservedOn());
+        Evidence mapsEvidence = evidence.stream().filter(e -> "GOOGLE_MAPS".equals(e.getSourceType())).findFirst().orElse(null);
+        m.put("googleMapsLocation", mapsEvidence == null ? null : evidenceValue(mapsEvidence.getObservation(), "address"));
+        m.put("googleMapsWebsiteDomain", mapsEvidence == null ? null : evidenceValue(mapsEvidence.getObservation(), "websiteDomain"));
         m.put("decisionStatus", decisionStatus);
         return m;
+    }
+
+    private String evidenceValue(String observation, String key) {
+        if (observation == null) return null;
+        String prefix = key + "=";
+        int start = observation.indexOf(prefix);
+        if (start < 0) return null;
+        start += prefix.length();
+        int end = observation.indexOf(';', start);
+        String value = observation.substring(start, end < 0 ? observation.length() : end).trim();
+        return value.isBlank() ? null : value;
     }
 
     private String inactivityReason(RegistryRecord r) {

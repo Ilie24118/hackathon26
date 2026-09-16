@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 class GooglePlacesTextSearchClient {
     private static final URI TEXT_SEARCH_URI = URI.create("https://places.googleapis.com/v1/places:searchText");
-    private static final String FIELD_MASK = "places.id,places.displayName,places.formattedAddress,places.location,places.googleMapsUri,places.websiteUri";
+    private static final String FIELD_MASK = "places.id,places.displayName,places.formattedAddress,places.location,places.googleMapsUri,places.websiteUri,places.businessStatus,places.currentOpeningHours";
     private static final String STRING_VALUE_PATTERN = "\"%s\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"";
     private static final String NUMBER_VALUE_PATTERN = "\"%s\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?)";
 
@@ -72,12 +72,15 @@ class GooglePlacesTextSearchClient {
         for (String place : objectsInPlacesArray(body)) {
             String location = objectValue(place, "location");
             String displayName = objectValue(place, "displayName");
+            String openingHours = objectValue(place, "currentOpeningHours");
             Double latitude = numberValue(location, "latitude");
             Double longitude = numberValue(location, "longitude");
             if (latitude == null || longitude == null) continue;
             result.add(new GooglePlaceCandidate(
                     stringValue(place, "id"), stringValue(displayName, "text"), stringValue(place, "formattedAddress"),
-                    latitude, longitude, stringValue(place, "googleMapsUri"), stringValue(place, "websiteUri")));
+                    latitude, longitude, stringValue(place, "googleMapsUri"), stringValue(place, "websiteUri"),
+                    stringValue(place, "businessStatus"), booleanValue(openingHours, "openNow"),
+                    String.join("\n", stringArrayValue(openingHours, "weekdayDescriptions"))));
         }
         return result;
     }
@@ -126,6 +129,20 @@ class GooglePlacesTextSearchClient {
     private Double numberValue(String json, String key) {
         Matcher matcher = Pattern.compile(NUMBER_VALUE_PATTERN.formatted(Pattern.quote(key))).matcher(json);
         return matcher.find() ? Double.valueOf(matcher.group(1)) : null;
+    }
+
+    private Boolean booleanValue(String json, String key) {
+        Matcher matcher = Pattern.compile("\\\"%s\\\"\\s*:\\s*(true|false)".formatted(Pattern.quote(key))).matcher(json);
+        return matcher.find() ? Boolean.valueOf(matcher.group(1)) : null;
+    }
+
+    private List<String> stringArrayValue(String json, String key) {
+        Matcher array = Pattern.compile("\\\"%s\\\"\\s*:\\s*\\[(.*?)\\]".formatted(Pattern.quote(key)), Pattern.DOTALL).matcher(json);
+        if (!array.find()) return List.of();
+        Matcher values = Pattern.compile("\\\"((?:\\\\.|[^\\\"\\\\])*)\\\"").matcher(array.group(1));
+        List<String> result = new ArrayList<>();
+        while (values.find()) result.add(values.group(1).replace("\\\\\"", "\"").replace("\\\\\\\\", "\\\\"));
+        return result;
     }
 
     private String escapeJson(String value) {

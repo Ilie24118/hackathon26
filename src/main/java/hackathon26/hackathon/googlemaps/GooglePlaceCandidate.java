@@ -8,5 +8,8 @@ record GooglePlaceCandidate(
         double latitude,
         double longitude,
         String googleMapsUri,
-        String websiteUri) {
+        String websiteUri,
+        String businessStatus,
+        Boolean openNow,
+        String openingHours) {
 }

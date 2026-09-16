@@ -81,7 +81,8 @@ public class GoogleMapsCompanyPresenceService {
                 place == null ? null : place.displayName(), place == null ? null : place.formattedAddress(),
                 place == null ? null : place.latitude(), place == null ? null : place.longitude(), distanceMeters,
                 place == null ? null : place.googleMapsUri(), place == null ? null : place.websiteUri(),
-                place == null ? null : websiteDomain(place.websiteUri()), message);
+                place == null ? null : websiteDomain(place.websiteUri()), place == null ? null : place.businessStatus(),
+                place == null ? null : place.openNow(), place == null ? null : place.openingHours(), message);
     }
 
     private String websiteDomain(String websiteUri) {

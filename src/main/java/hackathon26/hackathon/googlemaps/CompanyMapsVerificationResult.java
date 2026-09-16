@@ -14,6 +14,9 @@ public record CompanyMapsVerificationResult(
         String googleMapsUri,
         String websiteUri,
         String websiteDomain,
+        String businessStatus,
+        Boolean openNow,
+        String openingHours,
         String message) {
 
     public boolean isPresent() {

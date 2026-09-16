@@ -5,8 +5,11 @@ import hackathon26.hackathon.googlemaps.CompanyMapsVerificationResult;
 import hackathon26.hackathon.googlemaps.GoogleMapsCompanyPresenceService;
 import hackathon26.hackathon.googlemaps.MapsListingStatus;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,10 +29,17 @@ public class BusinessController {
     private final BusinessService service;
     private final BusinessRepository repository;
     private final GoogleMapsCompanyPresenceService googleMaps;
+    private final AtomicBoolean googleMapsBatchRunning = new AtomicBoolean();
     public BusinessController(BusinessService service, BusinessRepository repository, GoogleMapsCompanyPresenceService googleMaps) { this.service=service; this.repository=repository; this.googleMaps=googleMaps; }
 
     @GetMapping
-    public List<Map<String,Object>> list(@RequestParam(required=false) String query, @RequestParam(required=false) String signal, @RequestParam(required=false) String decision) { return service.list(query,signal,decision); }
+    public List<Map<String,Object>> list(@RequestParam(required=false) String query, @RequestParam(required=false) String signal, @RequestParam(required=false) String decision) {
+        Map<String, String> checks = repository.googleMapsChecks();
+        return service.list(query,signal,decision).stream().peek(row -> {
+            String status=checks.get(row.get("registryNumber"));
+            row.put("googleMapsChecked", status!=null); row.put("googleMapsCheckStatus", status);
+        }).toList();
+    }
     @GetMapping("/meta")
     public Map<String,Object> meta() { return service.meta(); }
     @GetMapping("/{registryNumber}")
@@ -51,8 +61,16 @@ public class BusinessController {
             String officer=input==null||blank(input.officer())?"Officer":input.officer();
             repository.addEvidence(registryNumber,"GOOGLE_MAPS",result.googleMapsUri(),googleMapsObservation(result),LocalDate.now(),officer);
         }
+        repository.recordGoogleMapsCheck(registryNumber, result.status().name());
         return result;
     }
+    @PostMapping("/google-maps/verify-missing")
+    public Map<String, Object> verifyMissingGoogleMaps() {
+        if (googleMapsBatchRunning.compareAndSet(false, true)) CompletableFuture.runAsync(this::verifyMissingGoogleMapsInBackground);
+        return batchStatus();
+    }
+    @GetMapping("/google-maps/status")
+    public Map<String, Object> googleMapsBatchStatus() { return batchStatus(); }
     @PostMapping("/{registryNumber}/decisions")
     public ResponseEntity<ReviewDecision> decision(@PathVariable String registryNumber,@RequestBody DecisionInput input) {
         requireRecord(registryNumber); if (!("CONFIRMED".equals(input.status())||"REJECTED".equals(input.status())||"NEEDS_FOLLOW_UP".equals(input.status()))||blank(input.note())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"A supported status and decision note are required");
@@ -67,6 +85,26 @@ public class BusinessController {
     private void requireRecord(String id){if(repository.find(id).isEmpty())throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Business record not found");}
     private String googleMapsObservation(CompanyMapsVerificationResult result) {
         return "googleMapsChecked=true; matchedPlaceName="+safe(result.matchedPlaceName())+"; address="+safe(result.formattedAddress())+"; latitude="+safe(result.matchedLatitude())+"; longitude="+safe(result.matchedLongitude())+"; distanceMeters="+safe(result.distanceMeters())+"; websiteUri="+safe(result.websiteUri())+"; websiteDomain="+safe(result.websiteDomain())+"; businessStatus="+safe(result.businessStatus())+"; openNow="+safe(result.openNow())+"; openingHours="+safe(result.openingHours()).replace("\n"," | ");
+    }
+    private void verifyMissingGoogleMapsInBackground() {
+        try {
+            Map<String, String> checks = repository.googleMapsChecks();
+            for (RegistryRecord record : repository.findAll()) {
+                if (checks.containsKey(record.getRegistryNumber())) continue;
+                CompanyMapsVerificationResult result;
+                try {
+                    result = googleMaps.verify(new CompanyMapsVerificationRequest(service.name(record), Double.parseDouble(record.getLatitude()), Double.parseDouble(record.getLongitude())));
+                    if (result.status() == MapsListingStatus.PRESENT) repository.addEvidence(record.getRegistryNumber(), "GOOGLE_MAPS", result.googleMapsUri(), googleMapsObservation(result), LocalDate.now(), "Google Maps");
+                    repository.recordGoogleMapsCheck(record.getRegistryNumber(), result.status().name());
+                } catch (Exception e) { repository.recordGoogleMapsCheck(record.getRegistryNumber(), "REQUEST_FAILED"); }
+            }
+        } finally { googleMapsBatchRunning.set(false); }
+    }
+    private Map<String, Object> batchStatus() {
+        Map<String, String> checks = repository.googleMapsChecks();
+        Map<String, Object> status = new LinkedHashMap<>();
+        status.put("running", googleMapsBatchRunning.get()); status.put("checked", checks.size()); status.put("total", repository.countRecords());
+        return status;
     }
     private String safe(Object value){return value==null?"":String.valueOf(value).replace(";",",");}
     private boolean blank(String s){return s==null||s.isBlank();} private String escape(String s){return "\""+(s==null?"":s.replace("\"","\"\""))+"\"";}

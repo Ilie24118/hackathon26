@@ -35,6 +35,19 @@ public class BusinessRepository {
     public int countRecords() { return jdbc.queryForObject("SELECT count(*) FROM registry_records", Integer.class); }
     public int countEvidence() { return jdbc.queryForObject("SELECT count(*) FROM business_evidence", Integer.class); }
     public int countDecided() { return jdbc.queryForObject("SELECT count(DISTINCT registry_number) FROM review_decisions", Integer.class); }
+    public synchronized Map<String, String> googleMapsChecks() {
+        jdbc.execute("CREATE TABLE IF NOT EXISTS google_maps_checks (registry_number VARCHAR(255) PRIMARY KEY, status VARCHAR(40) NOT NULL, checked_at TIMESTAMPTZ NOT NULL)");
+        Map<String, String> checks = new LinkedHashMap<>();
+        jdbc.query("SELECT registry_number, status FROM google_maps_checks", (rs, rowNumber) -> {
+            checks.put(rs.getString(1), rs.getString(2));
+            return null;
+        });
+        return checks;
+    }
+    public synchronized void recordGoogleMapsCheck(String registryNumber, String status) {
+        jdbc.execute("CREATE TABLE IF NOT EXISTS google_maps_checks (registry_number VARCHAR(255) PRIMARY KEY, status VARCHAR(40) NOT NULL, checked_at TIMESTAMPTZ NOT NULL)");
+        jdbc.update("INSERT INTO google_maps_checks (registry_number,status,checked_at) VALUES (?,?,?) ON CONFLICT (registry_number) DO NOTHING", registryNumber, status, OffsetDateTime.now());
+    }
 
     public void saveRecords(List<RegistryRecord> records) {
         jdbc.batchUpdate("INSERT INTO registry_records (" + RECORD_COLUMNS + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "

@@ -122,6 +122,7 @@
 
 <script>
 const state={rows:[],verified:[],chip:'look',search:'',street:'',limit:250,openId:null,aiResult:null};
+let mapsPollTimer;
 const SIGNAL={POSSIBLY_INACTIVE:['POSSIBLY INACTIVE','orange'],ADDRESS_CHECK:['CHECK ADDRESS',''],NEW_REGISTRATION:['NEW BUSINESS','green'],UNVERIFIED:['NO EVIDENCE','ghost'],EVIDENCE_REVIEW:['EVIDENCE TO REVIEW','']};
 const DECISION={CONFIRMED:['VERIFIED','green'],REJECTED:['REJECTED','ink'],NEEDS_FOLLOW_UP:['FOLLOW-UP','orange'],PENDING:['PENDING','ghost']};
 const CONF={HIGH:['High','#1f6b46'],MEDIUM:['Medium','#9b4400'],LOW:['Low','#8a8a83']};
@@ -182,6 +183,18 @@ async function loadAll(){
   $('m-evidence').textContent=meta.evidenceItems.toLocaleString();
   $('m-verified').textContent=meta.verified.toLocaleString();
   buildStreets();renderChips();render();renderVerified();
+  startGoogleMapsBatch();
+}
+async function startGoogleMapsBatch(){
+  try { const status=await api('/api/businesses/google-maps/verify-missing',{method:'POST'}); if(status.running) pollGoogleMapsBatch(); } catch(_) { /* The queue remains usable if Maps is unavailable. */ }
+}
+async function pollGoogleMapsBatch(){
+  clearTimeout(mapsPollTimer);
+  try {
+    const status=await api('/api/businesses/google-maps/status');
+    if(status.running){ $('queue-sub').textContent=`Google Maps: ${status.checked} of ${status.total} searched`; mapsPollTimer=setTimeout(pollGoogleMapsBatch,4000); }
+    else if(status.checked>0) { await loadAll(); }
+  } catch(_) {}
 }
 function buildStreets(){
   const counts={};for(const r of state.rows)counts[r.street]=(counts[r.street]||0)+1;
@@ -211,7 +224,9 @@ function rowHtml(r){
   const decided=r.decisionStatus!=='PENDING';
   const evidence=r.googleMapsMatch
     ?`<div class="evi"><span class="tag green">Google Maps match found</span>${r.googleMapsLocation?`<small>${esc(r.googleMapsLocation)}</small>`:''}</div>`
-    :`<div class="evi"><b>${r.evidenceCount} item${r.evidenceCount===1?'':'s'}</b><small>${r.lastObservedOn?'observed '+fmtDate(r.lastObservedOn):'no evidence yet'}</small></div>`;
+    :r.googleMapsChecked
+      ?`<div class="evi"><span class="tag ghost">Google Maps searched</span><small>${r.googleMapsCheckStatus==='NOT_FOUND'?'No matching listing found':'No Maps match saved'}</small></div>`
+      :`<div class="evi"><b>${r.evidenceCount} item${r.evidenceCount===1?'':'s'}</b><small>Google Maps search pending</small></div>`;
   return `<div class="trow" data-id="${esc(r.registryNumber)}">
     <div class="addr"><b>${esc(r.street||'—')} ${esc(r.houseNumber||'')}</b><small>2900 Schoten</small></div>
     <div class="biz"><b>${esc(r.name)}</b><small>${r.recordType==='ESTABLISHMENT'?'Vestiging (establishment)':'Legal entity'} · ${esc(r.registryNumber)}${r.parentRegistryNumber?' · parent '+esc(r.parentRegistryNumber):''}</small></div>
@@ -283,7 +298,7 @@ async function loadDetail(id){
 }
 async function refreshGoogleMapsEvidence(d){
   const latest=(d.evidence||[]).find(e=>e.sourceType==='GOOGLE_MAPS');
-  if(!latest||evidenceValues(latest.observation).googleMapsChecked==='true') return;
+  if(latest&&evidenceValues(latest.observation).googleMapsChecked==='true') return;
   try{
     const result=await api('/api/businesses/'+encodeURIComponent(state.openId)+'/google-maps/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({officer:officer()})});
     if(result.status==='PRESENT') await reloadDetail();
